@@ -3,14 +3,17 @@
   "version": "1.0.0-local",
   "description": "Claude Code CLI - AI-powered coding assistant",
   "type": "module",
-  "main": "dist/entrypoints/cli.js",
+  "main": "dist/cli.js",
   "bin": {
-    "claude": "dist/entrypoints/cli.js"
+    "claudecode": "dist/cli.js",
+    "claude": "dist/cli.js"
   },
   "scripts": {
     "build": "bun run build:bundle",
     "build:bundle": "bun run scripts/build.ts",
     "build:dev": "bun run scripts/build.ts --dev",
+    "install:global": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/install-global.ps1",
+    "install:global:skip-build": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/install-global.ps1 -SkipBuild",
     "dev": "bun run --watch entrypoints/cli.tsx",
     "start": "bun run entrypoints/cli.tsx",
     "typecheck": "tsc --noEmit",

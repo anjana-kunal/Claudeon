@@ -21,16 +21,27 @@ powershell -c "irm bun.sh/install.ps1 | iex"
 curl -fsSL https://bun.sh/install | bash
 ```
 
-## Install and Build
+## Quick Install (Windows, Recommended)
 
-Use the repository root (not a nested src folder).
+Use this from the repository root (not a nested src folder):
 
 ```powershell
 cd "C:\path\to\claudecode"
 bun install
-bun run build
-node .\dist\cli.js --version
+bun run install:global
+claudecode --version
 ```
+
+What `bun run install:global` does:
+
+- Builds automatically if `dist/cli.js` is missing
+- Creates `%USERPROFILE%\claudecode.cmd`
+- Adds `%USERPROFILE%` to your User PATH (if needed)
+- Verifies the install by running `claudecode --version`
+
+If a different terminal still cannot find `claudecode`, close and reopen that terminal.
+
+## Install (macOS/Linux)
 
 ```bash
 cd /path/to/claudecode
@@ -42,33 +53,17 @@ node ./dist/cli.js --version
 ## Run
 
 ```powershell
-# Run built CLI
-node .\dist\cli.js
+# Global command (after install:global on Windows)
+claudecode
 
-# Windows wrapper in this repo
-.\claudecode.cmd
+# Run built CLI directly
+node .\dist\cli.js
 
 # Development mode from source
 bun run start
 
 # Hot-reload dev mode
 bun run dev
-```
-
-## Global Command (Windows)
-
-If you want a global command from any terminal:
-
-```powershell
-$repo = "C:\path\to\claudecode"
-Set-Content -Path "$env:USERPROFILE\claudecode.cmd" -Value "@echo off`r`nnode `"$repo\dist\cli.js`" %*"
-$env:Path += ";$env:USERPROFILE"
-```
-
-Then run:
-
-```powershell
-claudecode --version
 ```
 
 ## Authentication and Provider Modes
