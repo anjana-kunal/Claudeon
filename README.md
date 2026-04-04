@@ -1,200 +1,218 @@
 # Claude Code CLI - Local Build
 
-This is a local build from source of the Claude Code CLI (originally from Anthropic's internal codebase).
+This is a local source build of the Claude Code CLI.
 
-**⚠️ WARNING:** This is reverse-engineered from extracted source code. Some features are stubbed out and may not work.
+WARNING: This codebase is community-maintained from extracted sources. Some internal features are stubbed and may not work.
 
 ## Prerequisites
 
-1. **Bun** (required) - Install from https://bun.sh
-   ```powershell
-   # Windows
-   powershell -c "irm bun.sh/install.ps1 | iex"
-   
-   # macOS/Linux
-   curl -fsSL https://bun.sh/install | bash
-   ```
+1. Bun (required): https://bun.sh
+2. Node.js 18+ (recommended for running the built CLI and wrapper scripts)
 
-2. **Node.js** (optional, for npm compatibility) - v18+
-
-## Installation
+Install Bun:
 
 ```powershell
-# Navigate to this directory
-cd "C:\Users\A N J A N A\Desktop\src"
-
-# Install dependencies
-bun install
-
-# Build the CLI
-bun run build
-
-# Test it works
-bun dist/cli.js --version
+# Windows
+powershell -c "irm bun.sh/install.ps1 | iex"
 ```
 
-## Running
+```bash
+# macOS/Linux
+curl -fsSL https://bun.sh/install | bash
+```
 
-After building, you can run the CLI:
+## Install and Build
+
+Use the repository root (not a nested src folder).
 
 ```powershell
-# Run the CLI
-bun dist/cli.js
+cd "C:\path\to\claudecode"
+bun install
+bun run build
+node .\dist\cli.js --version
+```
 
-# Or run directly from source (development mode)
+```bash
+cd /path/to/claudecode
+bun install
+bun run build
+node ./dist/cli.js --version
+```
+
+## Run
+
+```powershell
+# Run built CLI
+node .\dist\cli.js
+
+# Windows wrapper in this repo
+.\claudecode.cmd
+
+# Development mode from source
 bun run start
 
-# Or with the wrapper script
-bun dist/claude
+# Hot-reload dev mode
+bun run dev
 ```
 
-## Adding to PATH (Global Installation)
+## Global Command (Windows)
 
-To use `claude` command globally:
+If you want a global command from any terminal:
 
 ```powershell
-# Create a batch wrapper
-echo '@echo off
-bun "C:\Users\A N J A N A\Desktop\src\dist\cli.js" %*' > "$env:USERPROFILE\claude.cmd"
-
-# Add to PATH (run as admin or add permanently via System Properties)
+$repo = "C:\path\to\claudecode"
+Set-Content -Path "$env:USERPROFILE\claudecode.cmd" -Value "@echo off`r`nnode `"$repo\dist\cli.js`" %*"
 $env:Path += ";$env:USERPROFILE"
 ```
 
-## Development
+Then run:
 
 ```powershell
-# Run in development mode with hot reload
-bun run dev
+claudecode --version
+```
 
-# Type check
-bun run typecheck
+## Authentication and Provider Modes
 
-# Build in dev mode (with source maps)
-bun run build:dev
+Default mode is Anthropic first-party. You can also enable third-party providers.
+
+| Provider | Enable flag | Auth / required env | Model env |
+|---|---|---|---|
+| Anthropic (default) | none | `ANTHROPIC_API_KEY` or account login | `ANTHROPIC_MODEL` |
+| OpenRouter | `CLAUDE_CODE_USE_OPENROUTER=true` | `OPENROUTER_API_KEY` | `ANTHROPIC_MODEL` |
+| OpenAI | `CLAUDE_CODE_USE_OPENAI=true` | `OPENAI_API_KEY` or ChatGPT OAuth login | `OPENAI_MODEL` (or `ANTHROPIC_MODEL`) |
+| Gemini | `CLAUDE_CODE_USE_GEMINI=true` | `GEMINI_API_KEY` / `GOOGLE_API_KEY` or Google OAuth login | `GEMINI_MODEL` (or `ANTHROPIC_MODEL`) |
+| Qwen | `CLAUDE_CODE_USE_QWEN=true` | qwen.ai OAuth login | `QWEN_MODEL` (or `ANTHROPIC_MODEL`) |
+| NVIDIA | `CLAUDE_CODE_USE_NVIDIA=true` | `NVIDIA_API_KEY` | `NVIDIA_MODEL` (or `ANTHROPIC_MODEL`) |
+| Mistral Codestral | `CLAUDE_CODE_USE_MISTRAL=true` | `MISTRAL_API_KEY` | `MISTRAL_MODEL` (or `ANTHROPIC_MODEL`) |
+| AWS Bedrock | `CLAUDE_CODE_USE_BEDROCK=true` | AWS credentials + region | `ANTHROPIC_MODEL` |
+| Google Vertex | `CLAUDE_CODE_USE_VERTEX=true` | GCP auth + project/region | `ANTHROPIC_MODEL` |
+| Microsoft Foundry | `CLAUDE_CODE_USE_FOUNDRY=true` | Foundry auth vars | `ANTHROPIC_MODEL` |
+
+## Newly Added / Updated LLM Model Targets
+
+These are the current default or mapped model targets used in code:
+
+| Mode | Main default | Small/Fast default |
+|---|---|---|
+| Anthropic first-party | `claude-sonnet-4-6` (or `claude-opus-4-6` for some plans) | `claude-haiku-4-5-20251001` |
+| OpenAI mode | `openai/gpt-5.4` | `openai/gpt-5.4-mini` |
+| Gemini mode | `gemini/gemini-2.5-pro` | `gemini/gemini-2.5-flash` |
+| Qwen mode | `qwen/coder-model` | `qwen/coder-model` |
+| NVIDIA mode | `nvidia/z-ai/glm5` | `nvidia/minimaxai/minimax-m2.5` |
+| Mistral mode | `mistral/codestral-latest` | `mistral/codestral-latest` |
+
+OpenRouter is model-ID driven. Set `ANTHROPIC_MODEL` explicitly.
+Common examples:
+
+- `anthropic/claude-sonnet-4.6`
+- `anthropic/claude-opus-4.6`
+- `qwen/qwen3.6-plus:free`
+- `openrouter/free`
+- `openai/gpt-5.4`
+
+## Quick Provider Examples
+
+OpenRouter:
+
+```powershell
+$env:CLAUDE_CODE_USE_OPENROUTER="true"
+$env:OPENROUTER_API_KEY="sk-or-v1-xxxxx"
+$env:ANTHROPIC_MODEL="qwen/qwen3.6-plus:free"
+.\claudecode.cmd
+```
+
+OpenAI:
+
+```powershell
+$env:CLAUDE_CODE_USE_OPENAI="true"
+$env:OPENAI_API_KEY="sk-xxxxx"
+$env:OPENAI_MODEL="openai/gpt-5.4"
+.\claudecode.cmd
+```
+
+Gemini:
+
+```powershell
+$env:CLAUDE_CODE_USE_GEMINI="true"
+$env:GEMINI_API_KEY="your-gemini-key"
+$env:GEMINI_MODEL="gemini/gemini-2.5-pro"
+.\claudecode.cmd
+```
+
+NVIDIA:
+
+```powershell
+$env:CLAUDE_CODE_USE_NVIDIA="true"
+$env:NVIDIA_API_KEY="nvapi-xxxxx"
+$env:NVIDIA_MODEL="nvidia/z-ai/glm5"
+.\claudecode.cmd
 ```
 
 ## What Works
 
-- Basic CLI interface and REPL
-- File operations (read/write/edit)
-- Shell commands (bash/powershell)
+- Core CLI + REPL
+- File read/write/edit tools
+- Shell tools (bash/powershell)
 - Most built-in tools
 - MCP server support
+- Multi-provider model routing
 
-## What Doesn't Work (Stubbed Features)
+## Known Stubbed/Internal Features
 
-The following internal Anthropic features are stubbed out:
-- `@ant/computer-use-mcp` - Computer use functionality
-- `@ant/computer-use-swift` - macOS Swift bridge  
-- `@ant/computer-use-input` - Native input handling
-- `@ant/claude-for-chrome-mcp` - Chrome extension integration
-- `@anthropic-ai/mcpb` - MCP bundle handling
-- Native color-diff (using fallback)
+- `@ant/computer-use-mcp`
+- `@ant/computer-use-swift`
+- `@ant/computer-use-input`
+- `@ant/claude-for-chrome-mcp`
+- `@anthropic-ai/mcpb`
+- Native color-diff (fallback used)
 - Native keyboard modifier detection
-
-## Authentication
-
-You'll need to authenticate with your Anthropic account or use a third-party platform:
-
-### Option 1: Anthropic Account (Direct)
-```powershell
-# Run and follow login prompts
-claudecode
-# Then use /login command
-```
-
-### Option 2: API Key
-```powershell
-$env:ANTHROPIC_API_KEY = "your-api-key-here"
-claudecode
-```
-
-### Option 3: Third-Party Platforms
-
-Claude Code supports the following third-party platforms:
-
-#### **OpenRouter** (Recommended - FREE models available!)
-```powershell
-# Using FREE Google Gemini
-$env:CLAUDE_CODE_USE_OPENROUTER="true"
-$env:OPENROUTER_API_KEY="sk-or-v1-xxxxx"
-$env:ANTHROPIC_MODEL="google/gemini-2.0-flash-exp:free"
-claudecode
-
-# Or use Meta Llama (also FREE)
-$env:ANTHROPIC_MODEL="meta-llama/llama-3.1-8b-instruct:free"
-
-# Or any model from https://openrouter.ai/models
-$env:ANTHROPIC_MODEL="openai/gpt-5.4"  # Paid models also available
-```
-**See [OPENROUTER_SETUP.md](./OPENROUTER_SETUP.md) for full list of FREE models and detailed setup.**
-
-#### **Amazon Bedrock**
-```powershell
-$env:CLAUDE_CODE_USE_BEDROCK="true"
-$env:AWS_REGION="us-east-1"
-# Uses AWS credentials from ~/.aws/credentials
-claudecode
-```
-
-#### **Google Vertex AI**
-```powershell
-$env:CLAUDE_CODE_USE_VERTEX="true"
-$env:ANTHROPIC_VERTEX_PROJECT_ID="your-project-id"
-$env:CLOUD_ML_REGION="us-east5"
-# Uses GCP credentials from gcloud CLI
-claudecode
-```
-
-#### **Microsoft Foundry (Azure)**
-```powershell
-$env:CLAUDE_CODE_USE_FOUNDRY="true"
-$env:ANTHROPIC_FOUNDRY_RESOURCE="your-resource-name"
-$env:ANTHROPIC_FOUNDRY_API_KEY="your-api-key"
-claudecode
-```
 
 ## Troubleshooting
 
-### Module Resolution Errors
-If you see import errors, reinstall dependencies:
+Reinstall dependencies:
+
 ```powershell
 bun install --force
 ```
 
-### Build Errors
-Clear the dist folder and rebuild:
+Clean and rebuild:
+
 ```powershell
 Remove-Item -Recurse -Force dist
 bun run build
 ```
 
-### TypeScript Errors
-Many TS errors are expected due to missing internal type definitions.
-The build should still succeed.
+Type check:
 
-## Project Structure
-
-```
-src/
-├── entrypoints/     # CLI entry points (cli.tsx, mcp.ts)
-├── tools/           # Built-in tools
-├── services/        # API and service layer
-├── components/      # React/Ink UI components
-├── utils/           # Utility functions
-├── stubs/           # Stub packages for internal deps
-├── scripts/         # Build scripts
-├── dist/            # Built output (after bun run build)
-└── package.json     # Dependencies
+```powershell
+bun run typecheck
 ```
 
-## Build Configuration
+## Project Layout (Current)
 
-Feature flags and build-time constants are configured in `scripts/build.ts`.
-You can modify `FEATURE_FLAGS` to enable/disable features.
+```text
+.
+|- entrypoints/    # CLI entry points (cli.tsx, mcp.ts)
+|- tools/          # Built-in tools
+|- services/       # API and provider integrations
+|- components/     # React/Ink UI components
+|- utils/          # Core utilities and model logic
+|- stubs/          # Stubs for internal dependencies
+|- scripts/        # Build and dev scripts
+|- dist/           # Build output
+|- claudecode.cmd  # Windows wrapper
+|- package.json
+`- tsconfig.json
+```
+
+## Additional Setup Docs
+
+- [OPENROUTER_SETUP.md](./OPENROUTER_SETUP.md)
+- [QUICK_START_OPENROUTER.md](./QUICK_START_OPENROUTER.md)
+- [OPENROUTER_FIXES.md](./OPENROUTER_FIXES.md)
+- [OPENAI_SETUP.md](./OPENAI_SETUP.md)
 
 ## License
 
-This source code appears to be from Anthropic's proprietary codebase.
-Use at your own risk. Not intended for redistribution.
+This repository is intended for local experimentation and learning.
+Review upstream licensing and ownership details before redistribution.
