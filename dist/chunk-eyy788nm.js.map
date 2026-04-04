@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\assistant\\assistant.ts"],
+  "sourcesContent": [
+    "/**\r\n * Assistant command - Stub\r\n */\r\n\r\nexport async function runAssistantCommand(): Promise<void> {\r\n  console.log('Assistant command is not available in local builds')\r\n}\r\n\r\nexport default {\r\n  name: 'assistant',\r\n  description: 'Assistant features (not available in local builds)',\r\n  run: runAssistantCommand,\r\n}\r\n"
+  ],
+  "mappings": "4BAIA,eAAsB,CAAmB,EAAkB,CACzD,QAAQ,IAAI,oDAAoD,EAGlE,IAAe,GACb,KAAM,YACN,YAAa,qDACb,IAAK,CACP",
+  "debugId": "4029712F8AB9AE2564756E2164756E21",
+  "names": []
+}

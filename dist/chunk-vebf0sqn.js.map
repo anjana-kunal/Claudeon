@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\services\\mcp\\normalization.ts"],
+  "sourcesContent": [
+    "/**\n * Pure utility functions for MCP name normalization.\n * This file has no dependencies to avoid circular imports.\n */\n\n// Claude.ai server names are prefixed with this string\nconst CLAUDEAI_SERVER_PREFIX = 'claude.ai '\n\n/**\n * Normalize server names to be compatible with the API pattern ^[a-zA-Z0-9_-]{1,64}$\n * Replaces any invalid characters (including dots and spaces) with underscores.\n *\n * For claude.ai servers (names starting with \"claude.ai \"), also collapses\n * consecutive underscores and strips leading/trailing underscores to prevent\n * interference with the __ delimiter used in MCP tool names.\n */\nexport function normalizeNameForMCP(name: string): string {\n  let normalized = name.replace(/[^a-zA-Z0-9_-]/g, '_')\n  if (name.startsWith(CLAUDEAI_SERVER_PREFIX)) {\n    normalized = normalized.replace(/_+/g, '_').replace(/^_|_$/g, '')\n  }\n  return normalized\n}\n"
+  ],
+  "mappings": "0CAgBO,SAAS,CAAmB,CAAC,EAAsB,CACxD,IAAI,EAAa,EAAK,QAAQ,kBAAmB,GAAG,EACpD,GAAI,EAAK,WAZoB,YAYa,EACxC,EAAa,EAAW,QAAQ,MAAO,GAAG,EAAE,QAAQ,SAAU,EAAE,EAElE,OAAO",
+  "debugId": "49C0763EAD6ACCC464756E2164756E21",
+  "names": []
+}

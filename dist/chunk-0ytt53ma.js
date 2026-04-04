@@ -1,0 +1,4 @@
+import{PS as w,cR as v,dR as O,sT as z}from"./chunk-ptm8p7yv.js";import{FT as k}from"./chunk-kk7hxh65.js";import{H_ as q,I_ as p}from"./chunk-ksz63da1.js";import{Bia as e,Fia as n}from"./chunk-cs8pe1v7.js";function T(o){let _=v(5),{status:A,withSpace:P}=o,h=P===void 0?!1:P,$=j[A],K=!$.color,f=h&&" ",r;if(_[0]!==$.color||_[1]!==$.icon||_[2]!==K||_[3]!==f)r=M.jsxDEV(w,{color:$.color,dimColor:K,children:[$.icon,f]},void 0,!0,void 0,this),_[0]=$.color,_[1]=$.icon,_[2]=K,_[3]=f,_[4]=r;else r=_[4];return r}var M,j;var H=n(()=>{O();p();z();M=e(k(),1),j={success:{icon:q.tick,color:"success"},error:{icon:q.cross,color:"error"},warning:{icon:q.warning,color:"warning"},info:{icon:q.info,color:"suggestion"},pending:{icon:q.circle,color:void 0},loading:{icon:"…",color:void 0}}});
+export{T as ce,H as de};
+
+//# debugId=FA47251F6D3924DC64756E2164756E21

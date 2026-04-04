@@ -28,6 +28,17 @@ import {
   getVertexRegionForModel,
   isEnvTruthy,
 } from '../../utils/envUtils.js'
+import {
+  createOpenAIAnthropicWrapper,
+  isOpenAIAuthValid,
+} from '../openai/index.js'
+import {
+  createGeminiAnthropicWrapper,
+  loadGeminiAuth,
+} from '../gemini/index.js'
+import { createQwenAnthropicWrapper, loadQwenAuth } from '../qwen/index.js'
+import { createNvidiaAnthropicWrapper } from '../nvidia/index.js'
+import { createMistralAnthropicWrapper } from '../mistral/index.js'
 
 /**
  * Environment variables for different client types:
@@ -62,6 +73,14 @@ import {
  *   If specific model region not specified above
  * - ANTHROPIC_VERTEX_PROJECT_ID: Required. Your GCP project ID
  * - Standard GCP credentials configured via google-auth-library
+ *
+ * OpenRouter:
+ * - OPENROUTER_API_KEY: Required. Your OpenRouter API key from https://openrouter.ai/keys
+ *   OpenRouter provides unified access to Claude and other LLMs through a single API
+ * - ANTHROPIC_MODEL: Optional. Specify any OpenRouter model (e.g., 'google/gemini-2.0-flash-exp:free')
+ *   If not set, uses the default Claude model. See available models: https://openrouter.ai/models
+ * - OPENROUTER_REFERER: Optional. Your site URL for rankings on openrouter.ai
+ * - OPENROUTER_TITLE: Optional. App title for rankings on openrouter.ai
  *
  * Priority for determining region:
  * 1. Hardcoded model-specific environment variables
@@ -149,6 +168,60 @@ export async function getAnthropicClient({
     ...(resolvedFetch && {
       fetch: resolvedFetch,
     }),
+  }
+  const useOpenAI = isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI)
+  const useMistral = isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL)
+  const useQwen = isEnvTruthy(process.env.CLAUDE_CODE_USE_QWEN)
+  const useGemini = isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI)
+  const useNvidia = isEnvTruthy(process.env.CLAUDE_CODE_USE_NVIDIA)
+  const qwenAuth = loadQwenAuth()
+  const geminiAuth = loadGeminiAuth()
+  const hasGeminiApiKey =
+    !!process.env.GEMINI_API_KEY || !!process.env.GOOGLE_API_KEY
+  const hasNvidiaAuth = !!process.env.NVIDIA_API_KEY?.trim()
+  const hasMistralAuth = !!process.env.MISTRAL_API_KEY?.trim()
+  const hasQwenAuth =
+    !!qwenAuth?.tokens.accessToken || !!qwenAuth?.tokens.refreshToken
+  const hasGeminiAuth =
+    hasGeminiApiKey ||
+    !!geminiAuth?.tokens.accessToken ||
+    !!geminiAuth?.tokens.refreshToken
+
+  // Qwen and OpenAI flags can conflict in persisted settings. If Qwen auth is
+  // present, prefer Qwen to avoid routing Qwen model IDs to OpenAI endpoints.
+  if (useOpenAI && useQwen && hasQwenAuth) {
+    process.env.CLAUDE_CODE_USE_OPENAI = '0'
+  }
+  // Mistral and OpenAI flags can conflict. If Mistral auth is present,
+  // prefer Mistral to avoid routing Mistral model IDs to OpenAI APIs.
+  if (useOpenAI && useMistral && hasMistralAuth) {
+    process.env.CLAUDE_CODE_USE_OPENAI = '0'
+  }
+  // Gemini and OpenAI flags can conflict in persisted settings. If Gemini auth
+  // is present, prefer Gemini to avoid routing Gemini model IDs to OpenAI.
+  if (useOpenAI && useGemini && hasGeminiAuth) {
+    process.env.CLAUDE_CODE_USE_OPENAI = '0'
+  }
+  // If both Qwen and Gemini are set, pick the provider with valid auth.
+  if (useQwen && useGemini) {
+    if (hasGeminiAuth) {
+      process.env.CLAUDE_CODE_USE_QWEN = '0'
+    } else if (hasQwenAuth) {
+      process.env.CLAUDE_CODE_USE_GEMINI = '0'
+    }
+  }
+  // If Mistral is enabled with a valid API key, prefer it over OpenAI/Gemini/Qwen/NVIDIA.
+  if (useMistral && hasMistralAuth) {
+    process.env.CLAUDE_CODE_USE_OPENAI = '0'
+    process.env.CLAUDE_CODE_USE_GEMINI = '0'
+    process.env.CLAUDE_CODE_USE_QWEN = '0'
+    process.env.CLAUDE_CODE_USE_NVIDIA = '0'
+  // Otherwise, if NVIDIA is enabled with a valid API key, prefer it over OpenAI/Gemini/Qwen/Mistral.
+  } else if (useNvidia && hasNvidiaAuth) {
+    process.env.CLAUDE_CODE_USE_OPENAI = '0'
+    process.env.CLAUDE_CODE_USE_GEMINI = '0'
+    process.env.CLAUDE_CODE_USE_QWEN = '0'
+    process.env.CLAUDE_CODE_USE_MISTRAL = '0'
   }
   if (isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK)) {
     const { AnthropicBedrock } = await import('@anthropic-ai/bedrock-sdk')
@@ -295,6 +368,119 @@ export async function getAnthropicClient({
     }
     // we have always been lying about the return type - this doesn't support batching or models
     return new AnthropicVertex(vertexArgs) as unknown as Anthropic
+  }
+
+  // OpenRouter support
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENROUTER)) {
+    const openRouterApiKey = process.env.OPENROUTER_API_KEY
+    if (!openRouterApiKey) {
+      throw new Error(
+        'OPENROUTER_API_KEY environment variable is required when CLAUDE_CODE_USE_OPENROUTER is enabled'
+      )
+    }
+
+    // Allow users to specify custom headers for OpenRouter
+    // e.g., HTTP-Referer, X-Title for better tracking
+    const openRouterHeaders: Record<string, string> = {}
+    if (process.env.OPENROUTER_REFERER) {
+      openRouterHeaders['HTTP-Referer'] = process.env.OPENROUTER_REFERER
+    }
+    if (process.env.OPENROUTER_TITLE) {
+      openRouterHeaders['X-Title'] = process.env.OPENROUTER_TITLE
+    }
+
+    const clientConfig: ConstructorParameters<typeof Anthropic>[0] = {
+      apiKey: openRouterApiKey,
+      baseURL: 'https://openrouter.ai/api',  // Note: SDK adds /v1 automatically
+      ...ARGS,
+      defaultHeaders: {
+        ...ARGS.defaultHeaders,
+        ...openRouterHeaders,
+      },
+      ...(isDebugToStdErr() && { logger: createStderrLogger() }),
+    }
+
+    return new Anthropic(clientConfig)
+  }
+
+  // OpenAI support (via ChatGPT OAuth or API key)
+  // Uses native OpenAI API with Anthropic SDK wrapper for format translation
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI)) {
+    const geminiAuth = loadGeminiAuth()
+    const hasGeminiApiKey =
+      !!process.env.GEMINI_API_KEY || !!process.env.GOOGLE_API_KEY
+    const hasAuth =
+      hasGeminiApiKey ||
+      !!geminiAuth?.tokens.accessToken || !!geminiAuth?.tokens.refreshToken
+
+    if (!hasAuth) {
+      throw new Error(
+        'Not authenticated with Gemini.\n' +
+          'Either set GEMINI_API_KEY (or GOOGLE_API_KEY), or run `claudecode` and select "Gemini / Google account" or "Google API / AI Studio key" from /login.',
+      )
+    }
+
+    return createGeminiAnthropicWrapper() as unknown as Anthropic
+  }
+
+  // NVIDIA support (API key auth via build.nvidia.com OpenAI-compatible API)
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_NVIDIA)) {
+    const hasApiKey = !!process.env.NVIDIA_API_KEY?.trim()
+    if (!hasApiKey) {
+      throw new Error(
+        'Not authenticated with NVIDIA.\n' +
+          'Set NVIDIA_API_KEY, or run `claudecode` and select "NVIDIA / build.nvidia.com" from /login.',
+      )
+    }
+
+    return createNvidiaAnthropicWrapper() as unknown as Anthropic
+  }
+
+  // Mistral support (API key auth via codestral.mistral.ai OpenAI-compatible API)
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL)) {
+    const hasApiKey = !!process.env.MISTRAL_API_KEY?.trim()
+    if (!hasApiKey) {
+      throw new Error(
+        'Not authenticated with Mistral.\n' +
+          'Set MISTRAL_API_KEY, or run `claudecode` and select "Mistral API / Codestral" from /login.',
+      )
+    }
+
+    return createMistralAnthropicWrapper() as unknown as Anthropic
+  }
+
+  // OpenAI support (via ChatGPT OAuth or API key)
+  // Uses native OpenAI API with Anthropic SDK wrapper for format translation
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI)) {
+    // Check for authentication
+    const hasApiKey = !!process.env.OPENAI_API_KEY
+    const hasOAuthTokens = isOpenAIAuthValid()
+    
+    if (!hasApiKey && !hasOAuthTokens) {
+      throw new Error(
+        'Not authenticated with OpenAI.\n' +
+        'Either:\n' +
+        '  1. Set OPENAI_API_KEY environment variable, or\n' +
+        '  2. Run `claudecode` and select "Sign in with ChatGPT" to authenticate'
+      )
+    }
+
+    // Return the Anthropic-compatible wrapper that uses OpenAI under the hood
+    return createOpenAIAnthropicWrapper()
+  }
+
+  // Qwen support (via qwen.ai OAuth)
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_QWEN)) {
+    const qwenAuth = loadQwenAuth()
+    const hasAuth =
+      !!qwenAuth?.tokens.accessToken || !!qwenAuth?.tokens.refreshToken
+    if (!hasAuth) {
+      throw new Error(
+        'Not authenticated with Qwen.\n' +
+        'Run `claudecode` and select "Qwen / qwen.ai" from /login to authenticate.',
+      )
+    }
+    return createQwenAnthropicWrapper() as unknown as Anthropic
   }
 
   // Determine authentication method based on available tokens

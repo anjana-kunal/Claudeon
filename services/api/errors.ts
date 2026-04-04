@@ -51,6 +51,27 @@ import {
 import { shouldProcessRateLimits } from '../rateLimitMocking.js' // Used for /mock-limits command
 import { extractConnectionErrorDetails, formatAPIError } from './errorUtils.js'
 
+/**
+ * Safely get a header value from an error object.
+ * OpenRouter and some other providers return headers as a plain object
+ * instead of a Headers instance, so we need to handle both cases.
+ */
+function safeGetHeader(error: APIError, headerName: string): string | null {
+  if (!error.headers) return null
+  
+  // If headers has a .get method (Headers object), use it
+  if (typeof error.headers.get === 'function') {
+    return error.headers.get(headerName)
+  }
+  
+  // If headers is a plain object, access directly
+  if (typeof error.headers === 'object') {
+    return (error.headers as Record<string, string>)[headerName] ?? null
+  }
+  
+  return null
+}
+
 export const API_ERROR_MESSAGE_PREFIX = 'API Error'
 
 export function startsWithApiErrorPrefix(text: string): boolean {
@@ -468,11 +489,13 @@ export function getAssistantMessageFromError(
     shouldProcessRateLimits(isClaudeAISubscriber())
   ) {
     // Check if this is the new API with multiple rate limit headers
-    const rateLimitType = error.headers?.get?.(
+    const rateLimitType = safeGetHeader(
+      error,
       'anthropic-ratelimit-unified-representative-claim',
     ) as 'five_hour' | 'seven_day' | 'seven_day_opus' | null
 
-    const overageStatus = error.headers?.get?.(
+    const overageStatus = safeGetHeader(
+      error,
       'anthropic-ratelimit-unified-overage-status',
     ) as 'allowed' | 'allowed_warning' | 'rejected' | null
 
@@ -486,7 +509,8 @@ export function getAssistantMessageFromError(
       }
 
       // Extract rate limit information from headers
-      const resetHeader = error.headers?.get?.(
+      const resetHeader = safeGetHeader(
+        error,
         'anthropic-ratelimit-unified-reset',
       )
       if (resetHeader) {
@@ -501,14 +525,16 @@ export function getAssistantMessageFromError(
         limits.overageStatus = overageStatus
       }
 
-      const overageResetHeader = error.headers?.get?.(
+      const overageResetHeader = safeGetHeader(
+        error,
         'anthropic-ratelimit-unified-overage-reset',
       )
       if (overageResetHeader) {
         limits.overageResetsAt = Number(overageResetHeader)
       }
 
-      const overageDisabledReason = error.headers?.get?.(
+      const overageDisabledReason = safeGetHeader(
+        error,
         'anthropic-ratelimit-unified-overage-disabled-reason',
       ) as OverageDisabledReason | null
       if (overageDisabledReason) {

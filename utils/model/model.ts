@@ -34,6 +34,43 @@ export type ModelName = string
 export type ModelSetting = ModelName | ModelAlias | null
 
 export function getSmallFastModel(): ModelName {
+  // For OpenRouter, use the user's selected model since we can't assume any Anthropic model is available
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENROUTER)) {
+    // Return the user's selected model for OpenRouter, since OpenRouter may not have Anthropic models
+    return process.env.ANTHROPIC_MODEL || process.env.ANTHROPIC_SMALL_FAST_MODEL || getDefaultHaikuModel()
+  }
+  // For Gemini OAuth, prefer a fast Gemini model unless explicitly overridden.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI)) {
+    return (
+      process.env.GEMINI_MODEL ||
+      process.env.ANTHROPIC_MODEL ||
+      'gemini/gemini-2.5-flash'
+    )
+  }
+  // For Qwen OAuth, use fixed oauth model id unless explicitly overridden
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_QWEN)) {
+    return process.env.QWEN_MODEL || process.env.ANTHROPIC_MODEL || 'qwen/coder-model'
+  }
+  // For NVIDIA, prefer explicit NVIDIA_MODEL and fall back to a fast default.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_NVIDIA)) {
+    return (
+      process.env.NVIDIA_MODEL ||
+      process.env.ANTHROPIC_MODEL ||
+      'nvidia/minimaxai/minimax-m2.5'
+    )
+  }
+  // For Mistral Codestral, prefer explicit MISTRAL_MODEL and a fast default.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL)) {
+    return (
+      process.env.MISTRAL_MODEL ||
+      process.env.ANTHROPIC_MODEL ||
+      'mistral/codestral-latest'
+    )
+  }
+  // For OpenAI, use the user's selected model or default to GPT-5.4-mini
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI)) {
+    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'openai/gpt-5.4-mini'
+  }
   return process.env.ANTHROPIC_SMALL_FAST_MODEL || getDefaultHaikuModel()
 }
 
@@ -176,6 +213,49 @@ export function getRuntimeMainLoopModel(params: {
  * @returns The default model setting to use
  */
 export function getDefaultMainLoopModelSetting(): ModelName | ModelAlias {
+  // For OpenRouter, use the user's ANTHROPIC_MODEL env var as the default
+  // since we can't assume any specific Anthropic model is available
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENROUTER) && process.env.ANTHROPIC_MODEL) {
+    return process.env.ANTHROPIC_MODEL
+  }
+
+  // For Gemini OAuth, use GEMINI_MODEL or ANTHROPIC_MODEL env var as the default.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI)) {
+    return (
+      process.env.GEMINI_MODEL ||
+      process.env.ANTHROPIC_MODEL ||
+      'gemini/gemini-2.5-pro'
+    )
+  }
+
+  // For NVIDIA, use NVIDIA_MODEL or ANTHROPIC_MODEL env var as the default.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_NVIDIA)) {
+    return (
+      process.env.NVIDIA_MODEL ||
+      process.env.ANTHROPIC_MODEL ||
+      'nvidia/z-ai/glm5'
+    )
+  }
+
+  // For Mistral, use MISTRAL_MODEL or ANTHROPIC_MODEL env var as the default.
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL)) {
+    return (
+      process.env.MISTRAL_MODEL ||
+      process.env.ANTHROPIC_MODEL ||
+      'mistral/codestral-latest'
+    )
+  }
+
+  // For OpenAI, use the user's OPENAI_MODEL or ANTHROPIC_MODEL env var as the default
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI)) {
+    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'openai/gpt-5.4'
+  }
+
+  // For Qwen OAuth, prefer explicit QWEN_MODEL/OPENAI_MODEL but default to coder-model
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_QWEN)) {
+    return process.env.QWEN_MODEL || process.env.ANTHROPIC_MODEL || 'qwen/coder-model'
+  }
+
   // Ants default to defaultModel from flag config, or Opus 1M if not configured
   if (process.env.USER_TYPE === 'ant') {
     return (

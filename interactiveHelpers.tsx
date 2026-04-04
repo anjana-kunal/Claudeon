@@ -29,6 +29,7 @@ import type { PermissionMode } from './utils/permissions/PermissionMode.js';
 import { getBaseRenderOptions } from './utils/renderOptions.js';
 import { getSettingsWithAllErrors } from './utils/settings/allErrors.js';
 import { hasAutoModeOptIn, hasSkipDangerousModePermissionPrompt } from './utils/settings/settings.js';
+import { logForDebugging } from './utils/debug.js';
 export function completeOnboarding(): void {
   saveGlobalConfig(current => ({
     ...current,
@@ -111,15 +112,18 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
   if (!config.theme || !config.hasCompletedOnboarding // always show onboarding at least once
   ) {
     onboardingShown = true;
+    logForDebugging('[STARTUP] showSetupScreens: importing Onboarding...');
     const {
       Onboarding
     } = await import('./components/Onboarding.js');
+    logForDebugging('[STARTUP] showSetupScreens: Onboarding imported, showing dialog...');
     await showSetupDialog(root, done => <Onboarding onDone={() => {
       completeOnboarding();
       void done();
     }} />, {
       onChangeAppState
     });
+    logForDebugging('[STARTUP] showSetupScreens: Onboarding dialog completed');
   }
 
   // Always show the trust dialog in interactive sessions, regardless of permission mode.
@@ -133,10 +137,12 @@ export async function showSetupScreens(root: Root, permissionMode: PermissionMod
     // If it returns true, the TrustDialog would auto-resolve regardless of
     // security features, so we can skip the dynamic import and render cycle.
     if (!checkHasTrustDialogAccepted()) {
+      logForDebugging('[STARTUP] showSetupScreens: showing TrustDialog...');
       const {
         TrustDialog
       } = await import('./components/TrustDialog/TrustDialog.js');
       await showSetupDialog(root, done => <TrustDialog commands={commands} onDone={done} />);
+      logForDebugging('[STARTUP] showSetupScreens: TrustDialog completed');
     }
 
     // Signal that trust has been verified for this session.

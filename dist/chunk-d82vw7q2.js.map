@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\clear\\clear.ts"],
+  "sourcesContent": [
+    "import type { LocalCommandCall } from '../../types/command.js'\nimport { clearConversation } from './conversation.js'\n\nexport const call: LocalCommandCall = async (_, context) => {\n  await clearConversation(context)\n  return { type: 'text', value: '' }\n}\n"
+  ],
+  "mappings": "isFAGa,JAAyB,AAAO,JAAG,FAAY,LAE1D,CADA,AAAM,JAAkB,LAAO,JACxB,LAAE,DAAM,CAAQ,AAAO,JAAG,UAJnC",
+  "debugId": "912E0BC75CFFA62D64756E2164756E21",
+  "names": []
+}

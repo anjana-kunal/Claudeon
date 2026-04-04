@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\install-slack-app\\install-slack-app.ts"],
+  "sourcesContent": [
+    "import type { LocalCommandResult } from '../../commands.js'\nimport { logEvent } from '../../services/analytics/index.js'\nimport { openBrowser } from '../../utils/browser.js'\nimport { saveGlobalConfig } from '../../utils/config.js'\n\nconst SLACK_APP_URL = 'https://slack.com/marketplace/A08SF47R6P4-claude'\n\nexport async function call(): Promise<LocalCommandResult> {\n  logEvent('tengu_install_slack_app_clicked', {})\n\n  // Track that user has clicked to install\n  saveGlobalConfig(current => ({\n    ...current,\n    slackAppInstallCount: (current.slackAppInstallCount ?? 0) + 1,\n  }))\n\n  const success = await openBrowser(SLACK_APP_URL)\n\n  if (success) {\n    return {\n      type: 'text',\n      value: 'Opening Slack app installation page in browser…',\n    }\n  } else {\n    return {\n      type: 'text',\n      value: `Couldn't open browser. Visit: ${SLACK_APP_URL}`,\n    }\n  }\n}\n"
+  ],
+  "mappings": "29CAOA,SAAsB,LAAI,JAAgC,LAWxD,HAVA,JAAS,4BAAmC,LAAC,LAAC,JAG9C,JAAiB,AAAY,FACxB,JACH,gBAAuB,JAAQ,gBAAwB,HAAK,LAC9D,JAAE,JAEc,AAAM,JAAY,LAAa,JAG7C,AAAO,LACL,DAAM,CACN,AAAO,2CACT,JAEA,KAAO,LACL,DAAM,CACN,AAAO,2BAAiC,HAC1C,AAtBE,JAAgB,gEAJtB,IACA,IACA",
+  "debugId": "6EC2D36BB93D3DC164756E2164756E21",
+  "names": []
+}

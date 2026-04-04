@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\cwd.ts"],
+  "sourcesContent": [
+    "import { AsyncLocalStorage } from 'async_hooks'\nimport { getCwdState, getOriginalCwd } from '../bootstrap/state.js'\n\nconst cwdOverrideStorage = new AsyncLocalStorage<string>()\n\n/**\n * Run a function with an overridden working directory for the current async context.\n * All calls to pwd()/getCwd() within the function (and its async descendants) will\n * return the overridden cwd instead of the global one. This enables concurrent\n * agents to each see their own working directory without affecting each other.\n */\nexport function runWithCwdOverride<T>(cwd: string, fn: () => T): T {\n  return cwdOverrideStorage.run(cwd, fn)\n}\n\n/**\n * Get the current working directory\n */\nexport function pwd(): string {\n  return cwdOverrideStorage.getStore() ?? getCwdState()\n}\n\n/**\n * Get the current working directory or the original working directory if the current one is not available\n */\nexport function getCwd(): string {\n  try {\n    return pwd()\n  } catch {\n    return getOriginalCwd()\n  }\n}\n"
+  ],
+  "mappings": "4GAAA,sBAAS,oBAWF,SAAS,CAAqB,CAAC,EAAa,EAAgB,CACjE,OAAO,EAAmB,IAAI,EAAK,CAAE,EAMhC,SAAS,CAAG,EAAW,CAC5B,OAAO,EAAmB,SAAS,GAAK,EAAY,EAM/C,SAAS,CAAM,EAAW,CAC/B,GAAI,CACF,OAAO,EAAI,EACX,KAAM,CACN,OAAO,EAAe,OA1BpB,eAFN,IAEM,EAAqB,IAAI",
+  "debugId": "F9CF6D0CF337183664756E2164756E21",
+  "names": []
+}

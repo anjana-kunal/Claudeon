@@ -7,7 +7,7 @@ import {
   envDetector,
   hostDetector,
   osDetector,
-  resourceFromAttributes,
+  Resource,
 } from '@opentelemetry/resources'
 import {
   BatchLogRecordProcessor,
@@ -483,10 +483,10 @@ export async function initializeTelemetry() {
     }
   }
 
-  const baseResource = resourceFromAttributes(baseAttributes)
+  const baseResource = new Resource(baseAttributes)
 
   // Use OpenTelemetry detectors
-  const osResource = resourceFromAttributes(
+  const osResource = new Resource(
     osDetector.detect().attributes || {},
   )
 
@@ -497,9 +497,9 @@ export async function initializeTelemetry() {
         [SEMRESATTRS_HOST_ARCH]: hostDetected.attributes[SEMRESATTRS_HOST_ARCH],
       }
     : {}
-  const hostArchResource = resourceFromAttributes(hostArchAttributes)
+  const hostArchResource = new Resource(hostArchAttributes)
 
-  const envResource = resourceFromAttributes(
+  const envResource = new Resource(
     envDetector.detect().attributes || {},
   )
 

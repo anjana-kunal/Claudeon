@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\vim\\vim.ts"],
+  "sourcesContent": [
+    "import {\n  type AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,\n  logEvent,\n} from '../../services/analytics/index.js'\nimport type { LocalCommandCall } from '../../types/command.js'\nimport { getGlobalConfig, saveGlobalConfig } from '../../utils/config.js'\n\nexport const call: LocalCommandCall = async () => {\n  const config = getGlobalConfig()\n  let currentMode = config.editorMode || 'normal'\n\n  // Handle backward compatibility - treat 'emacs' as 'normal'\n  if (currentMode === 'emacs') {\n    currentMode = 'normal'\n  }\n\n  const newMode = currentMode === 'normal' ? 'vim' : 'normal'\n\n  saveGlobalConfig(current => ({\n    ...current,\n    editorMode: newMode,\n  }))\n\n  logEvent('tengu_editor_mode_changed', {\n    mode: newMode as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,\n    source:\n      'command' as AnalyticsMetadata_I_VERIFIED_THIS_IS_NOT_CODE_OR_FILEPATHS,\n  })\n\n  return {\n    type: 'text',\n    value: `Editor mode set to ${newMode}. ${\n      newMode === 'vim'\n        ? 'Use Escape key to toggle between INSERT and NORMAL modes.'\n        : 'Using standard (readline) keyboard bindings.'\n    }`,\n  }\n}\n"
+  ],
+  "mappings": "g7CAOa,JAAyB,GAAY,LAEhD,FAAI,JADW,JAAgB,JACN,MAAc,GAGvC,HAAI,FAAgB,EAClB,JAAc,GAGhB,FAAM,JAAU,FAAgB,GAAW,AAAQ,GAanD,CAXA,JAAiB,AAAY,FACxB,JACH,KAAY,LACd,JAAE,JAEF,JAAS,sBAA6B,LACpC,DAAM,JACN,CACE,GACJ,LAAC,JAEM,LACL,DAAM,OACN,MAAO,sBAAsB,MAC3B,IAAY,MACR,4DACA,gDAER,gBApCF,IAKA",
+  "debugId": "C280CE643A800B3B64756E2164756E21",
+  "names": []
+}

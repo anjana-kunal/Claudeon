@@ -1,0 +1,3 @@
+import{Sg as D}from"./chunk-8vqy1jz9.js";import{Q7 as C}from"./chunk-aqv78bm4.js";import{Dia as z,Gia as B}from"./chunk-cs8pe1v7.js";var H=z((v)=>{Object.defineProperty(v,"__esModule",{value:!0});v.getMachineId=void 0;var E=B("fs"),F=D(),q=C();async function G(){try{return(await E.promises.readFile("/etc/hostid",{encoding:"utf8"})).trim()}catch(k){q.diag.debug(`error reading machine id: ${k}`)}try{return(await(0,F.execAsync)("kenv -q smbios.system.uuid")).stdout.trim()}catch(k){q.diag.debug(`error reading machine id: ${k}`)}return}v.getMachineId=G});export default H();
+
+//# debugId=01947B63F4DBCAC164756E2164756E21

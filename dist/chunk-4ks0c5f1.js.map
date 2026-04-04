@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\tools\\TungstenTool\\TungstenTool.ts"],
+  "sourcesContent": [
+    "/**\r\n * TungstenTool - Stub for internal Anthropic tool\r\n */\r\nimport type { Tool } from '../../Tool.js'\r\n\r\nexport const TungstenTool: Tool = {\r\n  name: 'tungsten',\r\n  description: 'Internal Anthropic tool (not available in local builds)',\r\n  inputSchema: {\r\n    type: 'object',\r\n    properties: {},\r\n    required: [],\r\n  },\r\n  async call() {\r\n    return {\r\n      type: 'result',\r\n      data: 'TungstenTool is not available in local builds',\r\n    }\r\n  },\r\n}\r\n\r\nexport function clearTungstenCache(): void {\r\n  // Stub\r\n}\r\n"
+  ],
+  "mappings": "0CAqBO,SAAS,CAAkB,EAAS,MAhB9B,iBAAqB,CAChC,KAAM,WACN,YAAa,0DACb,YAAa,CACX,KAAM,SACN,WAAY,CAAC,EACb,SAAU,CAAC,CACb,OACM,KAAI,EAAG,CACX,MAAO,CACL,KAAM,SACN,KAAM,+CACR,EAEJ",
+  "debugId": "B222FF882CC54CA364756E2164756E21",
+  "names": []
+}

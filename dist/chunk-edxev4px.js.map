@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "sources": ["..\\node_modules\\@opentelemetry\\exporter-logs-otlp-grpc\\build\\src\\OTLPLogExporter.js", "..\\node_modules\\@opentelemetry\\exporter-logs-otlp-grpc\\build\\src\\index.js"],
+  "sourcesContent": [
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.OTLPLogExporter = void 0;\nconst otlp_grpc_exporter_base_1 = require(\"@opentelemetry/otlp-grpc-exporter-base\");\nconst otlp_transformer_1 = require(\"@opentelemetry/otlp-transformer\");\nconst otlp_exporter_base_1 = require(\"@opentelemetry/otlp-exporter-base\");\n/**\n * OTLP Logs Exporter for Node\n */\nclass OTLPLogExporter extends otlp_exporter_base_1.OTLPExporterBase {\n    constructor(config = {}) {\n        super((0, otlp_grpc_exporter_base_1.createOtlpGrpcExportDelegate)((0, otlp_grpc_exporter_base_1.convertLegacyOtlpGrpcOptions)(config, 'LOGS'), otlp_transformer_1.ProtobufLogsSerializer, 'LogsExportService', '/opentelemetry.proto.collector.logs.v1.LogsService/Export'));\n    }\n}\nexports.OTLPLogExporter = OTLPLogExporter;\n//# sourceMappingURL=OTLPLogExporter.js.map",
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.OTLPLogExporter = void 0;\nvar OTLPLogExporter_1 = require(\"./OTLPLogExporter\");\nObject.defineProperty(exports, \"OTLPLogExporter\", { enumerable: true, get: function () { return OTLPLogExporter_1.OTLPLogExporter; } });\n//# sourceMappingURL=index.js.map"
+  ],
+  "mappings": "gMAKA,CAAO,SAAe,JAAS,aAAc,CAAE,MAAO,EAAK,CAAC,EACpD,kBAAuB,OAC/B,IAAM,MACA,MACA,MAIN,MAAM,UAAwB,EAAqB,gBAAiB,CAChE,WAAW,CAAC,EAAS,CAAC,EAAG,CACrB,OAAO,EAAG,EAA0B,+BAA+B,EAAG,EAA0B,8BAA8B,EAAQ,MAAM,EAAG,EAAmB,uBAAwB,oBAAqB,2DAA2D,CAAC,EAEnR,CACQ,kBAAkB,kBCb1B,OAAO,eAAe,EAAS,aAAc,CAAE,MAAO,EAAK,CAAC,EACpD,kBAAuB,OAC/B,IAAI,MACJ,OAAO,eAAe,EAAS,kBAAmB,CAAE,WAAY,GAAM,IAAK,QAAS,EAAG,CAAE,OAAO,EAAkB,gBAAmB,CAAC",
+  "debugId": "5DA9893635F3628864756E2164756E21",
+  "names": []
+}

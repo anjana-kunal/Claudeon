@@ -17,6 +17,12 @@ import { Select } from './CustomSelect/select.js';
 import { KeyboardShortcutHint } from './design-system/KeyboardShortcutHint.js';
 import { Spinner } from './Spinner.js';
 import TextInput from './TextInput.js';
+import { GeminiAuthFlow } from './GeminiAuthFlow.js';
+import { GoogleApiAuthFlow } from './GoogleApiAuthFlow.js';
+import { MistralAuthFlow } from './MistralAuthFlow.js';
+import { OpenAIAuthFlow } from './OpenAIAuthFlow.js';
+import { QwenAuthFlow } from './QwenAuthFlow.js';
+import { NvidiaAuthFlow } from './NvidiaAuthFlow.js';
 type Props = {
   onDone(): void;
   startingMessage?: string;
@@ -29,6 +35,29 @@ type OAuthStatus = {
 | {
   state: 'platform_setup';
 } // Show platform setup info (Bedrock/Vertex/Foundry)
+| {
+  state: 'openai_setup';
+} // Show OpenAI/ChatGPT device code login
+| {
+  state: 'gemini_setup';
+} // Show Gemini/Google account web login
+| {
+  state: 'google_api_setup';
+} // Show Google API key setup (AI Studio)
+| {
+  state: 'mistral_setup';
+} // Show Mistral API key setup
+| {
+  state: 'qwen_setup';
+} // Show Qwen OAuth device code login
+| {
+  state: 'nvidia_setup';
+} // Show NVIDIA API key setup
+| {
+  state: 'openai_device_code';
+  userCode: string;
+  verificationUrl: string;
+} // Waiting for user to enter device code
 | {
   state: 'ready_to_start';
 } // Flow started, waiting for browser to open
@@ -405,6 +434,24 @@ function OAuthStatusMessage(t0) {
           t6 = [t4, t5, {
             label: <Text>3rd-party platform ·{" "}<Text dimColor={true}>Amazon Bedrock, Microsoft Foundry, or Vertex AI</Text>{"\n"}</Text>,
             value: "platform"
+          }, {
+            label: <Text>OpenAI / ChatGPT ·{" "}<Text dimColor={true}>Sign in with your ChatGPT subscription</Text>{"\n"}</Text>,
+            value: "openai"
+          }, {
+            label: <Text>Gemini / Google account ·{" "}<Text dimColor={true}>Sign in with your Google account</Text>{"\n"}</Text>,
+            value: "gemini"
+          }, {
+            label: <Text>Google API / AI Studio key ·{" "}<Text dimColor={true}>Use your Gemini API key</Text>{"\n"}</Text>,
+            value: "google_api"
+          }, {
+            label: <Text>Mistral API / Codestral ·{" "}<Text dimColor={true}>Use your Mistral API key</Text>{"\n"}</Text>,
+            value: "mistral"
+          }, {
+            label: <Text>Qwen / qwen.ai ·{" "}<Text dimColor={true}>Sign in with your Qwen account</Text>{"\n"}</Text>,
+            value: "qwen"
+          }, {
+            label: <Text>NVIDIA / build.nvidia.com ·{" "}<Text dimColor={true}>Use your NVIDIA API key</Text>{"\n"}</Text>,
+            value: "nvidia"
           }];
           $[5] = t6;
         } else {
@@ -417,6 +464,36 @@ function OAuthStatusMessage(t0) {
                 logEvent("tengu_oauth_platform_selected", {});
                 setOAuthStatus({
                   state: "platform_setup"
+                });
+              } else if (value_0 === "openai") {
+                logEvent("tengu_oauth_openai_selected", {});
+                setOAuthStatus({
+                  state: "openai_setup"
+                });
+              } else if (value_0 === "gemini") {
+                logEvent("tengu_oauth_gemini_selected", {});
+                setOAuthStatus({
+                  state: "gemini_setup"
+                });
+              } else if (value_0 === "google_api") {
+                logEvent("tengu_oauth_google_api_selected", {});
+                setOAuthStatus({
+                  state: "google_api_setup"
+                });
+              } else if (value_0 === "mistral") {
+                logEvent("tengu_oauth_mistral_selected", {});
+                setOAuthStatus({
+                  state: "mistral_setup"
+                });
+              } else if (value_0 === "qwen") {
+                logEvent("tengu_oauth_qwen_selected", {});
+                setOAuthStatus({
+                  state: "qwen_setup"
+                });
+              } else if (value_0 === "nvidia") {
+                logEvent("tengu_oauth_nvidia_selected", {});
+                setOAuthStatus({
+                  state: "nvidia_setup"
                 });
               } else {
                 setOAuthStatus({
@@ -504,6 +581,74 @@ function OAuthStatusMessage(t0) {
           t8 = $[19];
         }
         return t8;
+      }
+    case "openai_setup":
+    case "openai_device_code":
+      {
+        return <OpenAIAuthFlow 
+          onSuccess={() => {
+            // Mark as authenticated and complete the flow
+            setOAuthStatus({ state: 'success' });
+          }}
+          onBack={() => {
+            setOAuthStatus({ state: 'idle' });
+          }}
+        />;
+      }
+    case "gemini_setup":
+      {
+        return <GeminiAuthFlow
+          onSuccess={() => {
+            setOAuthStatus({ state: 'success' });
+          }}
+          onBack={() => {
+            setOAuthStatus({ state: 'idle' });
+          }}
+        />;
+      }
+    case "google_api_setup":
+      {
+        return <GoogleApiAuthFlow
+          onSuccess={() => {
+            setOAuthStatus({ state: 'success' });
+          }}
+          onBack={() => {
+            setOAuthStatus({ state: 'idle' });
+          }}
+        />;
+      }
+    case "mistral_setup":
+      {
+        return <MistralAuthFlow
+          onSuccess={() => {
+            setOAuthStatus({ state: 'success' });
+          }}
+          onBack={() => {
+            setOAuthStatus({ state: 'idle' });
+          }}
+        />;
+      }
+    case "qwen_setup":
+      {
+        return <QwenAuthFlow
+          onSuccess={() => {
+            setOAuthStatus({ state: 'success' });
+          }}
+          onBack={() => {
+            setOAuthStatus({ state: 'idle' });
+          }}
+        />;
+      }
+    case "nvidia_setup":
+      {
+        return <NvidiaAuthFlow
+          onSuccess={() => {
+            setOAuthStatus({ state: 'success' });
+          }}
+          onBack={() => {
+            setOAuthStatus({ state: 'idle' });
+          }}
+        />;
       }
     case "waiting_for_login":
       {

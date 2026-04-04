@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\assistant\\AssistantSessionChooser.tsx"],
+  "sourcesContent": [
+    "/**\r\n * Assistant Session Chooser - Stub\r\n */\r\nimport React from 'react'\r\n\r\nexport interface AssistantSessionChooserProps {\r\n  onClose: () => void\r\n  onSelect?: (sessionId: string) => void\r\n}\r\n\r\nexport function AssistantSessionChooser({ onClose }: AssistantSessionChooserProps): React.ReactElement {\r\n  React.useEffect(() => {\r\n    onClose()\r\n  }, [onClose])\r\n  \r\n  return null as unknown as React.ReactElement\r\n}\r\n\r\nexport default AssistantSessionChooser\r\n"
+  ],
+  "mappings": "yFAGA,SAOO,SAAS,CAAuB,EAAG,WAA6D,CAKrG,OAJA,UAAM,UAAU,IAAM,CACpB,EAAQ,GACP,CAAC,CAAO,CAAC,EAEL,KAGT,IAAe",
+  "debugId": "285DC66AB4BF970964756E2164756E21",
+  "names": []
+}

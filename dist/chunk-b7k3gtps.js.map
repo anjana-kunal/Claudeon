@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\statusNoticeHelpers.ts"],
+  "sourcesContent": [
+    "import { roughTokenCountEstimation } from '../services/tokenEstimation.js'\nimport type { AgentDefinitionsResult } from '../tools/AgentTool/loadAgentsDir.js'\n\nexport const AGENT_DESCRIPTIONS_THRESHOLD = 15_000\n\n/**\n * Calculate cumulative token estimate for agent descriptions\n */\nexport function getAgentDescriptionsTotalTokens(\n  agentDefinitions?: AgentDefinitionsResult,\n): number {\n  if (!agentDefinitions) return 0\n\n  return agentDefinitions.activeAgents\n    .filter(a => a.source !== 'built-in')\n    .reduce((total, agent) => {\n      const description = `${agent.agentType}: ${agent.whenToUse}`\n      return total + roughTokenCountEstimation(description)\n    }, 0)\n}\n"
+  ],
+  "mappings": "iGAQO,GAAS,CAA+B,CAC7C,EACQ,CACR,GAAI,CAAC,EAAkB,MAAO,GAE9B,OAAO,EAAiB,aACrB,OAAO,KAAK,EAAE,SAAW,UAAU,EACnC,OAAO,CAAC,EAAO,IAAU,CACxB,IAAM,EAAc,GAAG,EAAM,cAAc,EAAM,YACjD,OAAO,EAAQ,EAA0B,CAAW,GACnD,CAAC,MAfK,EAA+B,mBAH5C",
+  "debugId": "7DFAA0C583CB93C564756E2164756E21",
+  "names": []
+}

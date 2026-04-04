@@ -688,6 +688,15 @@ export function extractTag(html: string, tagName: string): string | null {
 
 export function isNotEmptyMessage(message: Message): boolean {
   if (
+    !message ||
+    typeof message !== 'object' ||
+    !('type' in message) ||
+    !('message' in message)
+  ) {
+    return false
+  }
+
+  if (
     message.type === 'progress' ||
     message.type === 'attachment' ||
     message.type === 'system'
@@ -695,27 +704,39 @@ export function isNotEmptyMessage(message: Message): boolean {
     return true
   }
 
-  if (typeof message.message.content === 'string') {
-    return message.message.content.trim().length > 0
+  const content = (message as Message & { message?: { content?: unknown } }).message
+    ?.content
+  if (typeof content === 'string') {
+    return content.trim().length > 0
   }
 
-  if (message.message.content.length === 0) {
+  if (!Array.isArray(content) || content.length === 0) {
     return false
   }
 
   // Skip multi-block messages for now
-  if (message.message.content.length > 1) {
+  if (content.length > 1) {
     return true
   }
 
-  if (message.message.content[0]!.type !== 'text') {
+  const firstBlock = content[0]
+  if (
+    !firstBlock ||
+    typeof firstBlock !== 'object' ||
+    !('type' in firstBlock)
+  ) {
+    return false
+  }
+
+  if (firstBlock.type !== 'text') {
     return true
   }
 
+  const text = typeof firstBlock.text === 'string' ? firstBlock.text : ''
   return (
-    message.message.content[0]!.text.trim().length > 0 &&
-    message.message.content[0]!.text !== NO_CONTENT_MESSAGE &&
-    message.message.content[0]!.text !== INTERRUPT_MESSAGE_FOR_TOOL_USE
+    text.trim().length > 0 &&
+    text !== NO_CONTENT_MESSAGE &&
+    text !== INTERRUPT_MESSAGE_FOR_TOOL_USE
   )
 }
 
@@ -739,6 +760,18 @@ export function normalizeMessages(
 ): (NormalizedAssistantMessage | NormalizedUserMessage)[]
 export function normalizeMessages(messages: Message[]): NormalizedMessage[]
 export function normalizeMessages(messages: Message[]): NormalizedMessage[] {
+  const safeMessages = messages.filter(
+    (message): message is Message =>
+      !!message &&
+      typeof message === 'object' &&
+      'type' in message &&
+      ((message.type === 'assistant' ||
+        message.type === 'user' ||
+        message.type === 'system' ||
+        message.type === 'progress' ||
+        message.type === 'attachment') as boolean),
+  )
+
   // isNewChain tracks whether we need to generate new UUIDs for messages when normalizing.
   // When a message has multiple content blocks, we split it into multiple messages,
   // each with a single content block. When this happens, we need to generate new UUIDs
@@ -746,11 +779,17 @@ export function normalizeMessages(messages: Message[]): NormalizedMessage[] {
   // This flag is set to true once we encounter a message with multiple content blocks,
   // and remains true for all subsequent messages in the normalization process.
   let isNewChain = false
-  return messages.flatMap(message => {
+  return safeMessages.flatMap(message => {
     switch (message.type) {
       case 'assistant': {
-        isNewChain = isNewChain || message.message.content.length > 1
-        return message.message.content.map((_, index) => {
+        const assistantContent = Array.isArray(message.message.content)
+          ? message.message.content.filter(
+              block =>
+                !!block && typeof block === 'object' && 'type' in block,
+            )
+          : []
+        isNewChain = isNewChain || assistantContent.length > 1
+        return assistantContent.map((_, index) => {
           const uuid = isNewChain
             ? deriveUUID(message.uuid, index)
             : message.uuid
@@ -792,9 +831,15 @@ export function normalizeMessages(messages: Message[]): NormalizedMessage[] {
             } as NormalizedMessage,
           ]
         }
-        isNewChain = isNewChain || message.message.content.length > 1
+        const userContent = Array.isArray(message.message.content)
+          ? message.message.content.filter(
+              block =>
+                !!block && typeof block === 'object' && 'type' in block,
+            )
+          : []
+        isNewChain = isNewChain || userContent.length > 1
         let imageIndex = 0
-        return message.message.content.map((_, index) => {
+        return userContent.map((_, index) => {
           const isImage = _.type === 'image'
           // For image content blocks, extract just the ID for this image
           const imageId =
@@ -2656,7 +2701,11 @@ export function normalizeContentFromAPI(
   if (!contentBlocks) {
     return []
   }
-  return contentBlocks.map(contentBlock => {
+  // Filter out any undefined/null elements before processing
+  const validBlocks = contentBlocks.filter((block): block is Exclude<typeof block, undefined | null> => 
+    block !== undefined && block !== null && typeof block === 'object' && 'type' in block
+  )
+  return validBlocks.map(contentBlock => {
     switch (contentBlock.type) {
       case 'tool_use': {
         if (

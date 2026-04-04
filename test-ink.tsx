@@ -1,0 +1,1 @@
+import React from 'react'; import { render, Text } from 'ink'; const App = () => <Text color='green'>Hello from Ink Windows!</Text>; const inst = render(<App/>); setTimeout(() => { console.log('Done test'); process.exit(0); }, 2000);

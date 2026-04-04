@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "sources": ["..\\node_modules\\@smithy\\querystring-parser\\dist-cjs\\index.js", "..\\node_modules\\@smithy\\url-parser\\dist-cjs\\index.js"],
+  "sourcesContent": [
+    "'use strict';\n\nfunction parseQueryString(querystring) {\n    const query = {};\n    querystring = querystring.replace(/^\\?/, \"\");\n    if (querystring) {\n        for (const pair of querystring.split(\"&\")) {\n            let [key, value = null] = pair.split(\"=\");\n            key = decodeURIComponent(key);\n            if (value) {\n                value = decodeURIComponent(value);\n            }\n            if (!(key in query)) {\n                query[key] = value;\n            }\n            else if (Array.isArray(query[key])) {\n                query[key].push(value);\n            }\n            else {\n                query[key] = [query[key], value];\n            }\n        }\n    }\n    return query;\n}\n\nexports.parseQueryString = parseQueryString;\n",
+    "'use strict';\n\nvar querystringParser = require('@smithy/querystring-parser');\n\nconst parseUrl = (url) => {\n    if (typeof url === \"string\") {\n        return parseUrl(new URL(url));\n    }\n    const { hostname, pathname, port, protocol, search } = url;\n    let query;\n    if (search) {\n        query = querystringParser.parseQueryString(search);\n    }\n    return {\n        hostname,\n        port: port ? parseInt(port) : undefined,\n        protocol,\n        path: pathname,\n        query,\n    };\n};\n\nexports.parseUrl = parseUrl;\n"
+  ],
+  "mappings": "wDAEA,SAAS,CAAgB,CAAC,EAAa,CACnC,IAAM,EAAQ,CAAC,EAEf,GADA,EAAc,EAAY,QAAQ,MAAO,EAAE,EACvC,EACA,QAAW,KAAQ,EAAY,MAAM,GAAG,EAAG,CACvC,IAAK,EAAK,EAAQ,MAAQ,EAAK,MAAM,GAAG,EAExC,GADA,EAAM,mBAAmB,CAAG,EACxB,EACA,EAAQ,mBAAmB,CAAK,EAEpC,GAAI,EAAE,KAAO,GACT,EAAM,GAAO,EAEZ,QAAI,MAAM,QAAQ,EAAM,EAAI,EAC7B,EAAM,GAAK,KAAK,CAAK,EAGrB,OAAM,GAAO,CAAC,EAAM,GAAM,CAAK,EAI3C,OAAO,EAGH,mBAAmB,kBCxB3B,IAAI,MAEE,EAAW,CAAC,IAAQ,CACtB,GAAI,OAAO,IAAQ,SACf,OAAO,EAAS,IAAI,IAAI,CAAG,CAAC,EAEhC,IAAQ,WAAU,WAAU,OAAM,WAAU,UAAW,EACnD,EACJ,GAAI,EACA,EAAQ,EAAkB,iBAAiB,CAAM,EAErD,MAAO,CACH,WACA,KAAM,EAAO,SAAS,CAAI,EAAI,OAC9B,WACA,KAAM,EACN,OACJ,GAGI,WAAW",
+  "debugId": "65C46EFED0B9BC4164756E2164756E21",
+  "names": []
+}

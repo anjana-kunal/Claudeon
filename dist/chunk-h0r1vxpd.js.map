@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\services\\compact\\cachedMicrocompact.ts"],
+  "sourcesContent": [
+    "/**\r\n * Cached Microcompact - Stub\r\n */\r\n\r\nexport interface MicrocompactCache {\r\n  get(key: string): unknown | undefined\r\n  set(key: string, value: unknown): void\r\n  clear(): void\r\n}\r\n\r\nexport function createMicrocompactCache(): MicrocompactCache {\r\n  const cache = new Map<string, unknown>()\r\n  return {\r\n    get: (key) => cache.get(key),\r\n    set: (key, value) => cache.set(key, value),\r\n    clear: () => cache.clear(),\r\n  }\r\n}\r\n\r\nexport async function cachedMicrocompact(\r\n  _input: string,\r\n  _options?: unknown\r\n): Promise<string> {\r\n  return _input\r\n}\r\n"
+  ],
+  "mappings": "0CAUO,SAAS,CAAuB,EAAsB,CAC3D,IAAM,EAAQ,IAAI,IAClB,MAAO,CACL,IAAK,CAAC,IAAQ,EAAM,IAAI,CAAG,EAC3B,IAAK,CAAC,EAAK,IAAU,EAAM,IAAI,EAAK,CAAK,EACzC,MAAO,IAAM,EAAM,MAAM,CAC3B,EAGF,eAAsB,CAAkB,CACtC,EACA,EACiB,CACjB,OAAO",
+  "debugId": "62496AB4045D2DE264756E2164756E21",
+  "names": []
+}

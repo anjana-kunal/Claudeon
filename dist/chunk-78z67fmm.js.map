@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\hooks\\useMergedTools.ts"],
+  "sourcesContent": [
+    "// biome-ignore-all assist/source/organizeImports: ANT-ONLY import markers must not be reordered\nimport { useMemo } from 'react'\nimport type { Tools, ToolPermissionContext } from '../Tool.js'\nimport { assembleToolPool } from '../tools.js'\nimport { useAppState } from '../state/AppState.js'\nimport { mergeAndFilterTools } from '../utils/toolPool.js'\n\n/**\n * React hook that assembles the full tool pool for the REPL.\n *\n * Uses assembleToolPool() (the shared pure function used by both REPL and runAgent)\n * to combine built-in tools with MCP tools, applying deny rules and deduplication.\n * Any extra initialTools are merged on top.\n *\n * @param initialTools - Extra tools to include (built-in + startup MCP from props).\n *   These are merged with the assembled pool and take precedence in deduplication.\n * @param mcpTools - MCP tools discovered dynamically (from mcp state)\n * @param toolPermissionContext - Permission context for filtering\n */\nexport function useMergedTools(\n  initialTools: Tools,\n  mcpTools: Tools,\n  toolPermissionContext: ToolPermissionContext,\n): Tools {\n  let replBridgeEnabled = false\n  let replBridgeOutboundOnly = false\n  return useMemo(() => {\n    // assembleToolPool is the shared function that both REPL and runAgent use.\n    // It handles: getTools() + MCP deny-rule filtering + dedup + MCP CLI exclusion.\n    const assembled = assembleToolPool(toolPermissionContext, mcpTools)\n\n    return mergeAndFilterTools(\n      initialTools,\n      assembled,\n      toolPermissionContext.mode,\n    )\n  }, [\n    initialTools,\n    mcpTools,\n    toolPermissionContext,\n    replBridgeEnabled,\n    replBridgeOutboundOnly,\n  ])\n}\n"
+  ],
+  "mappings": "gNAmBO,GAAS,LAAc,LAC5B,EACA,EACA,EACO,CAGP,OAAO,UAAQ,IAAM,CAGnB,IAAM,EAAY,EAAiB,EAAuB,CAAQ,EAElE,OAAO,EACL,EACA,EACA,EAAsB,IACxB,GACC,CACD,EACA,EACA,EAfsB,GACK,EAiB7B,CAAC,MAzCH,eAEA,IAEA,IAJA",
+  "debugId": "069182C996F0355564756E2164756E21",
+  "names": []
+}

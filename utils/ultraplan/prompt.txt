@@ -1,0 +1,4 @@
+# Ultraplan Prompt
+
+This is a placeholder for the ultraplan feature prompt.
+The ultraplan feature is not available in local builds.

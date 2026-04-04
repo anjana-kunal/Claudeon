@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\ink\\devtools.ts"],
+  "sourcesContent": [
+    "/**\r\n * Ink Devtools - Development-only module\r\n * This connects to React DevTools for debugging\r\n */\r\n\r\n// This is a stub - devtools connection is optional\r\nexport function connectToDevtools(): void {\r\n  // Only in development mode\r\n  if (process.env.NODE_ENV !== 'development') {\r\n    return\r\n  }\r\n  \r\n  try {\r\n    // eslint-disable-next-line @typescript-eslint/no-require-imports\r\n    const { connectToDevTools } = require('react-devtools-core')\r\n    connectToDevTools({\r\n      host: 'localhost',\r\n      port: 8097,\r\n    })\r\n  } catch {\r\n    // react-devtools-core not installed, skip\r\n  }\r\n}\r\n\r\n// Auto-connect in development\r\nconnectToDevtools()\r\n"
+  ],
+  "mappings": "mDAMO,SAAS,CAAiB,EAAS,CAMxC,GAAI,CAEF,IAAQ,gGACR,EAAkB,CAChB,KAAM,YACN,KAAM,IACR,CAAC,EACD,KAAM,gBAMV,EAAkB",
+  "debugId": "6D77A1953A1A391364756E2164756E21",
+  "names": []
+}

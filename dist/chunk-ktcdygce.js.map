@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\thinkback-play\\thinkback-play.ts"],
+  "sourcesContent": [
+    "import { join } from 'path'\nimport type { LocalCommandResult } from '../../commands.js'\nimport { loadInstalledPluginsV2 } from '../../utils/plugins/installedPluginsManager.js'\nimport { OFFICIAL_MARKETPLACE_NAME } from '../../utils/plugins/officialMarketplace.js'\nimport { playAnimation } from '../thinkback/thinkback.js'\n\nconst INTERNAL_MARKETPLACE_NAME = 'claude-code-marketplace'\nconst SKILL_NAME = 'thinkback'\n\nfunction getPluginId(): string {\n  const marketplaceName =\n    process.env.USER_TYPE === 'ant'\n      ? INTERNAL_MARKETPLACE_NAME\n      : OFFICIAL_MARKETPLACE_NAME\n  return `thinkback@${marketplaceName}`\n}\n\nexport async function call(): Promise<LocalCommandResult> {\n  // Get skill directory from installed plugins config\n  const v2Data = loadInstalledPluginsV2()\n  const pluginId = getPluginId()\n  const installations = v2Data.plugins[pluginId]\n\n  if (!installations || installations.length === 0) {\n    return {\n      type: 'text' as const,\n      value:\n        'Thinkback plugin not installed. Run /think-back first to install it.',\n    }\n  }\n\n  const firstInstall = installations[0]\n  if (!firstInstall?.installPath) {\n    return {\n      type: 'text' as const,\n      value: 'Thinkback plugin installation path not found.',\n    }\n  }\n\n  const skillDir = join(firstInstall.installPath, 'skills', SKILL_NAME)\n  const result = await playAnimation(skillDir)\n  return { type: 'text' as const, value: result.message }\n}\n"
+  ],
+  "mappings": "gsFAAA,SAAS,OAST,GAAS,LAAW,JAAW,LAK7B,AAAO,OAHL,EAAQ,FAAI,MAAc,AACtB,JACA,FAIR,SAAsB,LAAI,JAAgC,LAExD,FAAM,JAAS,JAAuB,JAChC,JAAW,JAAY,JACvB,JAAgB,JAAO,EAAQ,HAErC,HAAI,LAAC,HAAiB,JAAc,GAAW,JAC7C,AAAO,LACL,DAAM,CACN,AACE,gEACJ,JAGF,FAAM,JAAe,JAAc,HACnC,HAAI,LAAC,HAAc,MACjB,AAAO,LACL,DAAM,CACN,AAAO,yCACT,JAGF,FAAM,JAAW,JAAK,JAAa,MAAa,GAAU,LAAU,JAEpE,AAAO,LAAE,DAAM,CAAiB,CADjB,AAAM,JAAc,LAAQ,HACG,CAAQ,AAnClD,JAA4B,oBAC5B,EAAa,yBALnB,IACA,IACA",
+  "debugId": "F63B2AD7032D978064756E2164756E21",
+  "names": []
+}

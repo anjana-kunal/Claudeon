@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\stubs\\@ant\\claude-for-chrome-mcp\\index.ts"],
+  "sourcesContent": [
+    "/**\r\n * Stub for @ant/claude-for-chrome-mcp\r\n * Chrome extension MCP server integration\r\n */\r\n\r\nexport const BROWSER_TOOLS = [\r\n  'browser_navigate',\r\n  'browser_click',\r\n  'browser_type',\r\n  'browser_screenshot',\r\n  'browser_scroll',\r\n  'browser_get_content',\r\n] as const\r\n\r\nexport type BrowserTool = (typeof BROWSER_TOOLS)[number]\r\n\r\nexport interface ClaudeForChromeContext {\r\n  getSocketPaths(): string[]\r\n}\r\n\r\nexport interface Logger {\r\n  info(msg: string, ...args: unknown[]): void\r\n  error(msg: string, ...args: unknown[]): void\r\n  debug(msg: string, ...args: unknown[]): void\r\n  warn(msg: string, ...args: unknown[]): void\r\n}\r\n\r\nexport type PermissionMode = 'allow' | 'deny' | 'prompt'\r\n\r\nexport function createClaudeForChromeServer(): never {\r\n  throw new Error('@ant/claude-for-chrome-mcp is not available in stub mode')\r\n}\r\n\r\nexport function createClaudeForChromeMcpServer(_options?: unknown): { close(): void } {\r\n  console.warn('@ant/claude-for-chrome-mcp is stubbed - Chrome integration unavailable')\r\n  return { close() {} }\r\n}\r\n\r\nexport function runClaudeInChromeMcpServer(): Promise<never> {\r\n  return Promise.reject(new Error('@ant/claude-for-chrome-mcp is not available in stub mode'))\r\n}\r\n"
+  ],
+  "mappings": "0CA6BO,SAAS,CAA2B,EAAU,CACnD,MAAU,MAAM,0DAA0D,EAGrE,SAAS,CAA8B,CAAC,EAAuC,CAEpF,OADA,QAAQ,KAAK,wEAAwE,EAC9E,CAAE,KAAK,EAAG,EAAG,EAGf,SAAS,CAA0B,EAAmB,CAC3D,OAAO,QAAQ,OAAW,MAAM,0DAA0D,CAAC,MAlChF,iBAAgB,CAC3B,mBACA,gBACA,eACA,qBACA,iBACA,qBACF",
+  "debugId": "164137387F9984E564756E2164756E21",
+  "names": []
+}

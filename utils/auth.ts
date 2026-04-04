@@ -115,7 +115,13 @@ export function isAnthropicAuthEnabled(): boolean {
   const is3P =
     isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
-    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY) ||
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENROUTER) ||
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI) ||
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL) ||
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI) ||
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_QWEN) ||
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_NVIDIA)
 
   // Check if user has configured an external API key source
   // This allows externally-provided API keys to work (without requiring proxy configuration)

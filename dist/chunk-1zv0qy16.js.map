@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\cli\\exit.ts"],
+  "sourcesContent": [
+    "/**\n * CLI exit helpers for subcommand handlers.\n *\n * Consolidates the 4-5 line \"print + lint-suppress + exit\" block that was\n * copy-pasted ~60 times across `claude mcp *` / `claude plugin *` handlers.\n * The `: never` return type lets TypeScript narrow control flow at call sites\n * without a trailing `return`.\n */\n/* eslint-disable custom-rules/no-process-exit -- centralized CLI exit point */\n\n// `return undefined as never` (not a post-exit throw) — tests spy on\n// process.exit and let it return. Call sites write `return cliError(...)`\n// where subsequent code would dereference narrowed-away values under mock.\n// cliError uses console.error (tests spy on console.error); cliOk uses\n// process.stdout.write (tests spy on process.stdout.write — Bun's console.log\n// doesn't route through a spied process.stdout.write).\n\n/** Write an error message to stderr (if given) and exit with code 1. */\nexport function cliError(msg?: string): never {\n  // biome-ignore lint/suspicious/noConsole: centralized CLI error output\n  if (msg) console.error(msg)\n  process.exit(1)\n  return undefined as never\n}\n\n/** Write a message to stdout (if given) and exit with code 0. */\nexport function cliOk(msg?: string): never {\n  if (msg) process.stdout.write(msg + '\\n')\n  process.exit(0)\n  return undefined as never\n}\n"
+  ],
+  "mappings": "AAkBO,SAAS,CAAQ,CAAC,EAAqB,CAE5C,GAAI,EAAK,QAAQ,MAAM,CAAG,EAC1B,QAAQ,KAAK,CAAC,EACd,OAIK,SAAS,CAAK,CAAC,EAAqB,CACzC,GAAI,EAAK,QAAQ,OAAO,MAAM,EAAM;AAAA,CAAI,EACxC,QAAQ,KAAK,CAAC,EACd",
+  "debugId": "5842E0020C70AE4C64756E2164756E21",
+  "names": []
+}

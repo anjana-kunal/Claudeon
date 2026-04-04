@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\extra-usage\\extra-usage-noninteractive.ts"],
+  "sourcesContent": [
+    "import { runExtraUsage } from './extra-usage-core.js'\n\nexport async function call(): Promise<{ type: 'text'; value: string }> {\n  const result = await runExtraUsage()\n\n  if (result.type === 'message') {\n    return { type: 'text', value: result.value }\n  }\n\n  return {\n    type: 'text',\n    value: result.opened\n      ? `Browser opened to manage extra usage. If it didn't open, visit: ${result.url}`\n      : `Please visit ${result.url} to manage extra usage.`,\n  }\n}\n"
+  ],
+  "mappings": "2lDAEA,SAAsB,LAAI,JAA6C,LACrE,FAAM,JAAS,AAAM,JAAc,JAEnC,HAAI,JAAO,CAAS,IAClB,AAAO,LAAE,DAAM,CAAQ,AAAO,JAAO,DAAM,JAG7C,AAAO,LACL,DAAM,CACN,AAAO,JAAO,CACV,6DAAmE,JAAO,AAC1E,UAAgB,JAAO,sBAC7B,SAdF",
+  "debugId": "324ED29A9FE7D66B64756E2164756E21",
+  "names": []
+}

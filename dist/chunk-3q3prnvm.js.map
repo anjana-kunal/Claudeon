@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\stubs\\@anthropic-ai\\mcpb\\index.ts"],
+  "sourcesContent": [
+    "/**\r\n * Stub for @anthropic-ai/mcpb\r\n * MCP bundle/package manifest handling\r\n */\r\n\r\nimport { z } from 'zod'\r\n\r\nexport const McpbManifestSchema = z.object({\r\n  name: z.string(),\r\n  version: z.string(),\r\n  description: z.string().optional(),\r\n  command: z.string().optional(),\r\n  args: z.array(z.string()).optional(),\r\n  env: z.record(z.string()).optional(),\r\n})\r\n\r\nexport type McpbManifest = z.infer<typeof McpbManifestSchema>\r\n\r\nexport interface McpConfig {\r\n  command: string\r\n  args: string[]\r\n  env: Record<string, string>\r\n}\r\n\r\nexport function getMcpConfigForManifest(_manifest: McpbManifest): McpConfig {\r\n  return {\r\n    command: '',\r\n    args: [],\r\n    env: {},\r\n  }\r\n}\r\n\r\nexport function validateManifest(data: unknown): McpbManifest {\r\n  return McpbManifestSchema.parse(data)\r\n}\r\n"
+  ],
+  "mappings": "iGAwBO,GAAS,CAAuB,CAAC,EAAoC,CAC1E,MAAO,CACL,QAAS,GACT,KAAM,CAAC,EACP,IAAK,CAAC,CACR,EAGK,SAAS,CAAgB,CAAC,EAA6B,CAC5D,OAAO,EAAmB,MAAM,CAAI,MA1BzB,eAFb,IAEa,EAAqB,EAAE,OAAO,CACzC,KAAM,EAAE,OAAO,EACf,QAAS,EAAE,OAAO,EAClB,YAAa,EAAE,OAAO,EAAE,SAAS,EACjC,QAAS,EAAE,OAAO,EAAE,SAAS,EAC7B,KAAM,EAAE,MAAM,EAAE,OAAO,CAAC,EAAE,SAAS,EACnC,IAAK,EAAE,OAAO,EAAE,OAAO,CAAC,EAAE,SAAS,CACrC,CAAC",
+  "debugId": "D9E870FB9A5CA9DB64756E2164756E21",
+  "names": []
+}

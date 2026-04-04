@@ -237,7 +237,9 @@ const reconciler = createReconciler<
   -1,
   null
 >({
-  getRootHostContext: () => ({ isInsideText: false }),
+  getRootHostContext: () => {
+    return { isInsideText: false };
+  },
   prepareForCommit: () => {
     if (COMMIT_LOG) _prepareAt = performance.now()
     return null

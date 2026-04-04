@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\autoModeDenials.ts"],
+  "sourcesContent": [
+    "/**\n * Tracks commands recently denied by the auto mode classifier.\n * Populated from useCanUseTool.ts, read from RecentDenialsTab.tsx in /permissions.\n */\n\nimport { feature } from 'bun:bundle'\n\nexport type AutoModeDenial = {\n  toolName: string\n  /** Human-readable description of the denied command (e.g. bash command string) */\n  display: string\n  reason: string\n  timestamp: number\n}\n\nlet DENIALS: readonly AutoModeDenial[] = []\nconst MAX_DENIALS = 20\n\nexport function recordAutoModeDenial(denial: AutoModeDenial): void {\n  if (!feature('TRANSCRIPT_CLASSIFIER')) return\n  DENIALS = [denial, ...DENIALS.slice(0, MAX_DENIALS - 1)]\n}\n\nexport function getAutoModeDenials(): readonly AutoModeDenial[] {\n  return DENIALS\n}\n"
+  ],
+  "mappings": "0CAuBO,SAAS,CAAkB,EAA8B,CAC9D,OAAO,MATL,iBAAqC,CAAC",
+  "debugId": "37DAE00703158CB364756E2164756E21",
+  "names": []
+}

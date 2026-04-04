@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\execSyncWrapper.ts"],
+  "sourcesContent": [
+    "import {\n  type ExecSyncOptions,\n  type ExecSyncOptionsWithBufferEncoding,\n  type ExecSyncOptionsWithStringEncoding,\n  execSync as nodeExecSync,\n} from 'child_process'\nimport { slowLogging } from './slowOperations.js'\n\n/**\n * @deprecated Use async alternatives when possible. Sync exec calls block the event loop.\n *\n * Wrapped execSync with slow operation logging.\n * Use this instead of child_process execSync directly to detect performance issues.\n *\n * @example\n * import { execSync_DEPRECATED } from './execSyncWrapper.js'\n * const result = execSync_DEPRECATED('git status', { encoding: 'utf8' })\n */\nexport function execSync_DEPRECATED(command: string): Buffer\nexport function execSync_DEPRECATED(\n  command: string,\n  options: ExecSyncOptionsWithStringEncoding,\n): string\nexport function execSync_DEPRECATED(\n  command: string,\n  options: ExecSyncOptionsWithBufferEncoding,\n): Buffer\nexport function execSync_DEPRECATED(\n  command: string,\n  options?: ExecSyncOptions,\n): Buffer | string\nexport function execSync_DEPRECATED(\n  command: string,\n  options?: ExecSyncOptions,\n): Buffer | string {\n  using _ = slowLogging`execSync: ${command.slice(0, 100)}`\n  return nodeExecSync(command, options)\n}\n"
+  ],
+  "mappings": "qHAAA,aAIE,sBA2BK,SAAS,CAAmB,CACjC,EACA,EACiB,CACjB,mBAAM,EAAI,EAAV,EAAU,cAAwB,EAAQ,MAAM,EAAG,GAAG,IAAtD,GACA,OAAO,EAAa,EAAS,CAAO,EADpC,oDA7BF",
+  "debugId": "B042B222CA961F0B64756E2164756E21",
+  "names": []
+}

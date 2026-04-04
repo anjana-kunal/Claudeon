@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\swarm\\constants.ts"],
+  "sourcesContent": [
+    "export const TEAM_LEAD_NAME = 'team-lead'\nexport const SWARM_SESSION_NAME = 'claude-swarm'\nexport const SWARM_VIEW_WINDOW_NAME = 'swarm-view'\nexport const TMUX_COMMAND = 'tmux'\nexport const HIDDEN_SESSION_NAME = 'claude-hidden'\n\n/**\n * Gets the socket name for external swarm sessions (when user is not in tmux).\n * Uses a separate socket to isolate swarm operations from user's tmux sessions.\n * Includes PID to ensure multiple Claude instances don't conflict.\n */\nexport function getSwarmSocketName(): string {\n  return `claude-swarm-${process.pid}`\n}\n\n/**\n * Environment variable to override the command used to spawn teammate instances.\n * If not set, defaults to process.execPath (the current Claude binary).\n * This allows customization for different environments or testing.\n */\nexport const TEAMMATE_COMMAND_ENV_VAR = 'CLAUDE_CODE_TEAMMATE_COMMAND'\n\n/**\n * Environment variable set on spawned teammates to indicate their assigned color.\n * Used for colored output and pane identification.\n */\nexport const TEAMMATE_COLOR_ENV_VAR = 'CLAUDE_CODE_AGENT_COLOR'\n\n/**\n * Environment variable set on spawned teammates to require plan mode before implementation.\n * When set to 'true', teammates must enter plan mode and get approval before writing code.\n */\nexport const PLAN_MODE_REQUIRED_ENV_VAR = 'CLAUDE_CODE_PLAN_MODE_REQUIRED'\n"
+  ],
+  "mappings": "0CAWO,SAAS,CAAkB,EAAW,CAC3C,MAAO,gBAAgB,QAAQ,UAZpB,EAAiB,YACjB,EAAqB,eACrB,EAAyB,aACzB,EAAe,OACf,EAAsB,gBAgBtB,EAA2B",
+  "debugId": "3BFF8DE03990755D64756E2164756E21",
+  "names": []
+}

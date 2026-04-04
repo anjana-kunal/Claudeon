@@ -108,13 +108,22 @@ function detectGateway({
   headers,
   baseUrl,
 }: {
-  headers?: globalThis.Headers
+  headers?: globalThis.Headers | Record<string, string>
   baseUrl?: string
 }): KnownGateway | undefined {
   if (headers) {
     // Header names are already lowercase from the Headers API
     const headerNames: string[] = []
-    headers.forEach((_, key) => headerNames.push(key))
+    
+    // Handle both Headers object and plain object
+    if (typeof headers.forEach === 'function') {
+      // Headers object
+      headers.forEach((_, key) => headerNames.push(key))
+    } else if (typeof headers === 'object') {
+      // Plain object (from OpenRouter, etc.)
+      headerNames.push(...Object.keys(headers))
+    }
+    
     for (const [gw, { prefixes }] of Object.entries(GATEWAY_FINGERPRINTS)) {
       if (prefixes.some(p => headerNames.some(h => h.startsWith(p)))) {
         return gw as KnownGateway

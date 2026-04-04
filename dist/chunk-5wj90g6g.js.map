@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\node_modules\\@opentelemetry\\exporter-metrics-otlp-http\\node_modules\\@opentelemetry\\resources\\build\\src\\detectors\\platform\\node\\machine-id\\getMachineId-bsd.js"],
+  "sourcesContent": [
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.getMachineId = void 0;\nconst fs_1 = require(\"fs\");\nconst execAsync_1 = require(\"./execAsync\");\nconst api_1 = require(\"@opentelemetry/api\");\nasync function getMachineId() {\n    try {\n        const result = await fs_1.promises.readFile('/etc/hostid', { encoding: 'utf8' });\n        return result.trim();\n    }\n    catch (e) {\n        api_1.diag.debug(`error reading machine id: ${e}`);\n    }\n    try {\n        const result = await (0, execAsync_1.execAsync)('kenv -q smbios.system.uuid');\n        return result.stdout.trim();\n    }\n    catch (e) {\n        api_1.diag.debug(`error reading machine id: ${e}`);\n    }\n    return undefined;\n}\nexports.getMachineId = getMachineId;\n//# sourceMappingURL=getMachineId-bsd.js.map"
+  ],
+  "mappings": "+JAKA,CAAO,SAAe,EAAS,aAAc,CAAE,MAAO,EAAK,CAAC,EACpD,eAAoB,OAC5B,IAAM,UACA,MACA,MACN,eAAe,CAAY,EAAG,CAC1B,GAAI,CAEA,OADe,MAAM,EAAK,SAAS,SAAS,cAAe,CAAE,SAAU,MAAO,CAAC,GACjE,KAAK,EAEvB,MAAO,EAAG,CACN,EAAM,KAAK,MAAM,6BAA6B,GAAG,EAErD,GAAI,CAEA,OADe,MAAO,EAAG,EAAY,WAAW,4BAA4B,GAC9D,OAAO,KAAK,EAE9B,MAAO,EAAG,CACN,EAAM,KAAK,MAAM,6BAA6B,GAAG,EAErD,OAEI,eAAe",
+  "debugId": "01947B63F4DBCAC164756E2164756E21",
+  "names": []
+}

@@ -534,14 +534,19 @@ export function getCommandsByMaxPriority(
 /**
  * Returns true if the command is a slash command that should be routed through
  * processSlashCommand rather than sent to the model as text.
+ * Also treats legacy `.agent` input as command-like for compatibility.
  *
  * Commands with `skipSlashCommands` (e.g. bridge/CCR messages) are NOT treated
  * as slash commands — their text is meant for the model.
  */
 export function isSlashCommand(cmd: QueuedCommand): boolean {
+  const trimmed = typeof cmd.value === 'string' ? cmd.value.trim() : ''
+  const isLegacyAgentShortcut =
+    trimmed === '.agent' || trimmed.startsWith('.agent ')
+
   return (
     typeof cmd.value === 'string' &&
-    cmd.value.trim().startsWith('/') &&
+    (trimmed.startsWith('/') || isLegacyAgentShortcut) &&
     !cmd.skipSlashCommands
   )
 }

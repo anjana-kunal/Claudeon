@@ -240,11 +240,18 @@ export function buildAccountProperties(): Property[] {
 export function buildAPIProviderProperties(): Property[] {
   const apiProvider = getAPIProvider();
   const properties: Property[] = [];
+  const hasGeminiApiKey = !!process.env.GEMINI_API_KEY?.trim() || !!process.env.GOOGLE_API_KEY?.trim();
+  const isMistralProvider = isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL);
   if (apiProvider !== 'firstParty') {
     const providerLabel = {
       bedrock: 'AWS Bedrock',
       vertex: 'Google Vertex AI',
-      foundry: 'Microsoft Foundry'
+      foundry: 'Microsoft Foundry',
+      openrouter: 'OpenRouter',
+      openai: isMistralProvider ? 'Mistral API / Codestral' : 'OpenAI / ChatGPT',
+      gemini: hasGeminiApiKey ? 'Google API / AI Studio (Gemini)' : 'Google Gemini (web auth)',
+      qwen: 'Qwen',
+      nvidia: 'NVIDIA build.nvidia.com'
     }[apiProvider];
     properties.push({
       label: 'API provider',
@@ -318,6 +325,30 @@ export function buildAPIProviderProperties(): Property[] {
     if (isEnvTruthy(process.env.CLAUDE_CODE_SKIP_FOUNDRY_AUTH)) {
       properties.push({
         value: 'Microsoft Foundry auth skipped'
+      });
+    }
+  } else if (apiProvider === 'openai' && isMistralProvider) {
+    const mistralBaseUrl = process.env.MISTRAL_BASE_URL;
+    if (mistralBaseUrl) {
+      properties.push({
+        label: 'Mistral base URL',
+        value: mistralBaseUrl
+      });
+    }
+  } else if (apiProvider === 'gemini') {
+    const geminiBaseUrl = process.env.GEMINI_BASE_URL;
+    if (geminiBaseUrl) {
+      properties.push({
+        label: 'Gemini base URL',
+        value: geminiBaseUrl
+      });
+    }
+  } else if (apiProvider === 'nvidia') {
+    const nvidiaBaseUrl = process.env.NVIDIA_BASE_URL;
+    if (nvidiaBaseUrl) {
+      properties.push({
+        label: 'NVIDIA base URL',
+        value: nvidiaBaseUrl
       });
     }
   }

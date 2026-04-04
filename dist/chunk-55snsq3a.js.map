@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\node_modules\\@opentelemetry\\otlp-transformer\\node_modules\\@opentelemetry\\resources\\build\\src\\detectors\\platform\\node\\machine-id\\execAsync.js"],
+  "sourcesContent": [
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.execAsync = void 0;\nconst child_process = require(\"child_process\");\nconst util = require(\"util\");\nexports.execAsync = util.promisify(child_process.exec);\n//# sourceMappingURL=execAsync.js.map"
+  ],
+  "mappings": "iEAKA,OAAO,eAAe,EAAS,aAAc,CAAE,MAAO,EAAK,CAAC,EACpD,YAAiB,OACzB,IAAM,qBACA,YACE,YAAY,EAAK,UAAU,EAAc,IAAI",
+  "debugId": "86BF292933212B1164756E2164756E21",
+  "names": []
+}

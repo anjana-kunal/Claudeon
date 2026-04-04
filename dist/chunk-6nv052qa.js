@@ -1,0 +1,4 @@
+import{r7 as y,v7 as V}from"./chunk-ky8vfv6q.js";import{D7 as q,F7 as Q}from"./chunk-wqqzqd5r.js";import{R_ as p,T_ as K}from"./chunk-ksz63da1.js";import{Fia as J}from"./chunk-cs8pe1v7.js";function j(){return!!z}async function D(){if(b!==null)return b;return b=!!z,b}function P(){return W||null}async function w(){return(await p(y,["-V"])).code===0}function E(){if(f!==null)return f;let k=process.env.TERM_PROGRAM,B=!!process.env.ITERM_SESSION_ID,H=q.terminal==="iTerm.app";return f=k==="iTerm.app"||B||H,f}async function F(){return(await p(Y,["session","list"])).code===0}function G(){b=null,f=null}var z,W,b=null,f=null,Y="it2";var Z=J(()=>{Q();K();V();z=process.env.TMUX,W=process.env.TMUX_PANE});
+export{j as f7,D as g7,P as h7,w as i7,E as j7,Y as k7,F as l7,G as m7,Z as n7};
+
+//# debugId=13DFF331AC05F6D264756E2164756E21

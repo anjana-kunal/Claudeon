@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\worktreeModeEnabled.ts"],
+  "sourcesContent": [
+    "/**\n * Worktree mode is now unconditionally enabled for all users.\n *\n * Previously gated by GrowthBook flag 'tengu_worktree_mode', but the\n * CACHED_MAY_BE_STALE pattern returns the default (false) on first launch\n * before the cache is populated, silently swallowing --worktree.\n * See https://github.com/anthropics/claude-code/issues/27044.\n */\nexport function isWorktreeModeEnabled(): boolean {\n  return true\n}\n"
+  ],
+  "mappings": "0CAQO,SAAS,CAAqB,EAAY,CAC/C,MAAO",
+  "debugId": "96486C8FAF42B98D64756E2164756E21",
+  "names": []
+}

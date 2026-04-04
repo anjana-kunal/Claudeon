@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\components\\agents\\SnapshotUpdateDialog.tsx"],
+  "sourcesContent": [
+    "/**\r\n * Snapshot Update Dialog - Stub\r\n */\r\nimport React from 'react'\r\n\r\nexport interface SnapshotUpdateDialogProps {\r\n  onClose: () => void\r\n}\r\n\r\nexport function SnapshotUpdateDialog({ onClose }: SnapshotUpdateDialogProps): React.ReactElement {\r\n  React.useEffect(() => {\r\n    // Auto-close since this is a stub\r\n    onClose()\r\n  }, [onClose])\r\n  \r\n  return null as unknown as React.ReactElement\r\n}\r\n\r\nexport default SnapshotUpdateDialog\r\n"
+  ],
+  "mappings": "yFAGA,SAMO,SAAS,CAAoB,EAAG,WAA0D,CAM/F,OALA,UAAM,UAAU,IAAM,CAEpB,EAAQ,GACP,CAAC,CAAO,CAAC,EAEL,KAGT,IAAe",
+  "debugId": "BA458984C70619C564756E2164756E21",
+  "names": []
+}

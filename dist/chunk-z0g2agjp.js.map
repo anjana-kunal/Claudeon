@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "sources": ["..\\node_modules\\@opentelemetry\\exporter-trace-otlp-grpc\\build\\src\\OTLPTraceExporter.js", "..\\node_modules\\@opentelemetry\\exporter-trace-otlp-grpc\\build\\src\\index.js"],
+  "sourcesContent": [
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.OTLPTraceExporter = void 0;\nconst otlp_grpc_exporter_base_1 = require(\"@opentelemetry/otlp-grpc-exporter-base\");\nconst otlp_transformer_1 = require(\"@opentelemetry/otlp-transformer\");\nconst otlp_exporter_base_1 = require(\"@opentelemetry/otlp-exporter-base\");\n/**\n * OTLP Trace Exporter for Node\n */\nclass OTLPTraceExporter extends otlp_exporter_base_1.OTLPExporterBase {\n    constructor(config = {}) {\n        super((0, otlp_grpc_exporter_base_1.createOtlpGrpcExportDelegate)((0, otlp_grpc_exporter_base_1.convertLegacyOtlpGrpcOptions)(config, 'TRACES'), otlp_transformer_1.ProtobufTraceSerializer, 'TraceExportService', '/opentelemetry.proto.collector.trace.v1.TraceService/Export'));\n    }\n}\nexports.OTLPTraceExporter = OTLPTraceExporter;\n//# sourceMappingURL=OTLPTraceExporter.js.map",
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.OTLPTraceExporter = void 0;\nvar OTLPTraceExporter_1 = require(\"./OTLPTraceExporter\");\nObject.defineProperty(exports, \"OTLPTraceExporter\", { enumerable: true, get: function () { return OTLPTraceExporter_1.OTLPTraceExporter; } });\n//# sourceMappingURL=index.js.map"
+  ],
+  "mappings": "gMAKA,CAAO,SAAe,JAAS,aAAc,CAAE,MAAO,EAAK,CAAC,EACpD,oBAAyB,OACjC,IAAM,MACA,MACA,MAIN,MAAM,UAA0B,EAAqB,gBAAiB,CAClE,WAAW,CAAC,EAAS,CAAC,EAAG,CACrB,OAAO,EAAG,EAA0B,+BAA+B,EAAG,EAA0B,8BAA8B,EAAQ,QAAQ,EAAG,EAAmB,wBAAyB,qBAAsB,6DAA6D,CAAC,EAEzR,CACQ,oBAAoB,kBCb5B,OAAO,eAAe,EAAS,aAAc,CAAE,MAAO,EAAK,CAAC,EACpD,oBAAyB,OACjC,IAAI,MACJ,OAAO,eAAe,EAAS,oBAAqB,CAAE,WAAY,GAAM,IAAK,QAAS,EAAG,CAAE,OAAO,EAAoB,kBAAqB,CAAC",
+  "debugId": "A939CC0E110A710A64756E2164756E21",
+  "names": []
+}

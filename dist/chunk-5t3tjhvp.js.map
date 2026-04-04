@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\rewind\\rewind.ts"],
+  "sourcesContent": [
+    "import type { LocalCommandResult } from '../../commands.js'\nimport type { ToolUseContext } from '../../Tool.js'\n\nexport async function call(\n  _args: string,\n  context: ToolUseContext,\n): Promise<LocalCommandResult> {\n  if (context.openMessageSelector) {\n    context.openMessageSelector()\n  }\n  // Return a skip message to not append any messages.\n  return { type: 'skip' }\n}\n"
+  ],
+  "mappings": "0CAGA,eAAsB,CAAI,CACxB,EACA,EAC6B,CAC7B,GAAI,EAAQ,oBACV,EAAQ,oBAAoB,EAG9B,MAAO,CAAE,KAAM,MAAO",
+  "debugId": "549CC3031A59DF0B64756E2164756E21",
+  "names": []
+}

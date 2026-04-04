@@ -15,11 +15,17 @@ type ProcessQueueResult = {
 }
 
 /**
- * Check if a queued command is a slash command (value starts with '/').
+ * Check if a queued command should be treated as command input.
+ * Supports slash commands and the legacy `.agent` shortcut.
  */
 function isSlashCommand(cmd: QueuedCommand): boolean {
   if (typeof cmd.value === 'string') {
-    return cmd.value.trim().startsWith('/')
+    const trimmed = cmd.value.trim()
+    return (
+      trimmed.startsWith('/') ||
+      trimmed === '.agent' ||
+      trimmed.startsWith('.agent ')
+    )
   }
   // For ContentBlockParam[], check the first text block
   for (const block of cmd.value) {

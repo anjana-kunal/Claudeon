@@ -1,0 +1,3 @@
+import{wg as E}from"./chunk-55snsq3a.js";import{Q7 as D}from"./chunk-aqv78bm4.js";import{Dia as B,Gia as C}from"./chunk-cs8pe1v7.js";var J=B((v)=>{Object.defineProperty(v,"__esModule",{value:!0});v.getMachineId=void 0;var q=C("process"),F=E(),G=D();async function H(){let b="%windir%\\System32\\REG.exe";if(q.arch==="ia32"&&"PROCESSOR_ARCHITEW6432"in q.env)b="%windir%\\sysnative\\cmd.exe /c "+b;try{let k=(await(0,F.execAsync)(`${b} QUERY HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Cryptography /v MachineGuid`)).stdout.split("REG_SZ");if(k.length===2)return k[1].trim()}catch(f){G.diag.debug(`error reading machine id: ${f}`)}return}v.getMachineId=H});export default J();
+
+//# debugId=7C8091D46EBD0B8B64756E2164756E21

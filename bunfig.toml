@@ -1,0 +1,21 @@
+# Bun configuration for Claude Code CLI
+
+[install]
+# Use exact versions for reproducible builds
+exact = true
+
+[install.scopes]
+# Map internal packages to local stubs
+"@ant" = { path = "./stubs/@ant" }
+
+[run]
+# Enable hot reload in dev mode
+bun = true
+
+[bundle]
+# Target for bundling
+target = "bun"
+
+# Define replacements
+[define]
+# Build-time macros are defined in scripts/build.ts

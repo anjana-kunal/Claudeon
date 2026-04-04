@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\controlMessageCompat.ts"],
+  "sourcesContent": [
+    "/**\n * Normalize camelCase `requestId` → snake_case `request_id` on incoming\n * control messages (control_request, control_response).\n *\n * Older iOS app builds send `requestId` due to a missing Swift CodingKeys\n * mapping. Without this shim, `isSDKControlRequest` in replBridge.ts rejects\n * the message (it checks `'request_id' in value`), and structuredIO.ts reads\n * `message.response.request_id` as undefined — both silently drop the message.\n *\n * If both `request_id` and `requestId` are present, snake_case wins.\n * Mutates the object in place.\n */\nexport function normalizeControlMessageKeys(obj: unknown): unknown {\n  if (obj === null || typeof obj !== 'object') return obj\n  const record = obj as Record<string, unknown>\n  if ('requestId' in record && !('request_id' in record)) {\n    record.request_id = record.requestId\n    delete record.requestId\n  }\n  if (\n    'response' in record &&\n    record.response !== null &&\n    typeof record.response === 'object'\n  ) {\n    const response = record.response as Record<string, unknown>\n    if ('requestId' in response && !('request_id' in response)) {\n      response.request_id = response.requestId\n      delete response.requestId\n    }\n  }\n  return obj\n}\n"
+  ],
+  "mappings": "AAYO,SAAS,CAA2B,CAAC,EAAuB,CACjE,GAAI,IAAQ,MAAQ,OAAO,IAAQ,SAAU,OAAO,EACpD,IAAM,EAAS,EACf,GAAI,cAAe,GAAU,EAAE,eAAgB,GAC7C,EAAO,WAAa,EAAO,UAC3B,OAAO,EAAO,UAEhB,GACE,aAAc,GACd,EAAO,WAAa,MACpB,OAAO,EAAO,WAAa,SAC3B,CACA,IAAM,EAAW,EAAO,SACxB,GAAI,cAAe,GAAY,EAAE,eAAgB,GAC/C,EAAS,WAAa,EAAS,UAC/B,OAAO,EAAS,UAGpB,OAAO",
+  "debugId": "464D68DABBE3E2DE64756E2164756E21",
+  "names": []
+}

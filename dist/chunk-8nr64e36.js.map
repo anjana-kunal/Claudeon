@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\cost\\cost.ts"],
+  "sourcesContent": [
+    "import { formatTotalCost } from '../../cost-tracker.js'\nimport { currentLimits } from '../../services/claudeAiLimits.js'\nimport type { LocalCommandCall } from '../../types/command.js'\nimport { isClaudeAISubscriber } from '../../utils/auth.js'\n\nexport const call: LocalCommandCall = async () => {\n  if (isClaudeAISubscriber()) {\n    let value: string\n\n    if (currentLimits.isUsingOverage) {\n      value =\n        'You are currently using your overages to power your Claude Code usage. We will automatically switch you back to your subscription rate limits when they reset'\n    } else {\n      value =\n        'You are currently using your subscription to power your Claude Code usage'\n    }\n\n    if (process.env.USER_TYPE === 'ant') {\n      value += `\\n\\n[ANT-ONLY] Showing cost anyway:\\n ${formatTotalCost()}`\n    }\n    return { type: 'text', value }\n  }\n  return { type: 'text', value: formatTotalCost() }\n}\n"
+  ],
+  "mappings": "8lFAKa,JAAyB,GAAY,LAChD,HAAI,JAAqB,JAAG,LAC1B,FAAI,JAEJ,HAAI,JAAc,SAChB,JACE,0JAEF,CACE,sEAGJ,HAAI,EAAQ,FAAI,MAAc,AAC5B,HAAS;AAAA;AAAA;AAAA,GAAyC,EAAgB,IAEpE,MAAO,CAAE,KAAM,OAAQ,OAAM,EAE/B,MAAO,CAAE,KAAM,OAAQ,MAAO,EAAgB,CAAE,gBAtBlD,IACA,IAEA",
+  "debugId": "22E267F2C41FAC7F64756E2164756E21",
+  "names": []
+}

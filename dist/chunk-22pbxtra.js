@@ -1,0 +1,3 @@
+import{aU as e,bU as o}from"./chunk-6574rjk4.js";import"./chunk-ksz63da1.js";import"./chunk-c4511512.js";import"./chunk-7b1vyv7e.js";import"./chunk-tyqzht40.js";import"./chunk-qr0xq9ye.js";import"./chunk-2chyymxq.js";import"./chunk-akrrkem2.js";import"./chunk-cn83pdqq.js";import"./chunk-4rteakec.js";import"./chunk-awpswmwp.js";import"./chunk-nfma275k.js";import"./chunk-pam4fwbt.js";import{Fia as t}from"./chunk-cs8pe1v7.js";async function n(){if(await e("https://www.stickermule.com/claudecode"))return{type:"text",value:"Opening sticker page in browser…"};else return{type:"text",value:"Failed to open browser. Visit: https://www.stickermule.com/claudecode"}}var s=t(()=>{o()});s();export{n as call};
+
+//# debugId=8AF89432C27624C964756E2164756E21

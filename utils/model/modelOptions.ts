@@ -16,6 +16,7 @@ import { getSettings_DEPRECATED } from '../settings/settings.js'
 import { checkOpus1mAccess, checkSonnet1mAccess } from './check1mAccess.js'
 import { getAPIProvider } from './providers.js'
 import { isModelAllowed } from './modelAllowlist.js'
+import { isEnvTruthy } from '../envUtils.js'
 import {
   getCanonicalName,
   getClaudeAiUserDefaultModelDescription,
@@ -40,6 +41,166 @@ export type ModelOption = {
   label: string
   description: string
   descriptionForModel?: string
+}
+
+function getOpenAIModelOptions(): ModelOption[] {
+  return [
+    getDefaultOptionForUser(),
+    {
+      value: 'openai/gpt-5.4',
+      label: 'GPT-5.4',
+      description: 'Latest frontier agentic coding model',
+    },
+    {
+      value: 'openai/gpt-5.4-mini',
+      label: 'GPT-5.4 Mini',
+      description: 'Smaller frontier agentic coding model',
+    },
+    {
+      value: 'openai/gpt-5.3-codex',
+      label: 'GPT-5.3 Codex',
+      description: 'Frontier Codex-optimized agentic coding model',
+    },
+    {
+      value: 'openai/gpt-5.2-codex',
+      label: 'GPT-5.2 Codex',
+      description: 'Frontier agentic coding model',
+    },
+    {
+      value: 'openai/gpt-5.2',
+      label: 'GPT-5.2',
+      description: 'Optimized for professional work and long-running agents',
+    },
+    {
+      value: 'openai/gpt-5.1-codex-max',
+      label: 'GPT-5.1 Codex Max',
+      description: 'Codex-optimized model for deep and fast reasoning',
+    },
+    {
+      value: 'openai/gpt-5.1-codex-mini',
+      label: 'GPT-5.1 Codex Mini',
+      description: 'Optimized for codex. Cheaper, faster, but less capable',
+    },
+  ]
+}
+
+function getGeminiModelOptions(): ModelOption[] {
+  return [
+    getDefaultOptionForUser(),
+    {
+      value: 'gemini/gemini-3.1-pro-preview',
+      label: 'Gemini 3.1 Pro Preview',
+      description: 'Preview Gemini model for advanced reasoning and coding',
+    },
+    {
+      value: 'gemini/gemini-3-flash-preview',
+      label: 'Gemini 3 Flash Preview',
+      description: 'Preview Gemini model tuned for low-latency coding tasks',
+    },
+    {
+      value: 'gemini/gemini-2.5-pro',
+      label: 'Gemini 2.5 Pro',
+      description: 'Most capable Gemini model for complex coding tasks',
+    },
+    {
+      value: 'gemini/gemini-2.5-flash',
+      label: 'Gemini 2.5 Flash',
+      description: 'Fast and capable Gemini model for everyday coding',
+    },
+    {
+      value: 'gemini/gemini-2.5-flash-lite',
+      label: 'Gemini 2.5 Flash Lite',
+      description: 'Lower-latency Gemini model for lightweight tasks',
+    },
+    {
+      value: 'gemini/gemini-2.0-flash',
+      label: 'Gemini 2.0 Flash',
+      description: 'Legacy Flash model for compatibility',
+    },
+  ]
+}
+
+function getQwenModelOptions(): ModelOption[] {
+  return [
+    getDefaultOptionForUser(),
+    {
+      value: 'qwen/coder-model',
+      label: 'Qwen OAuth (coder-model)',
+      description: 'Qwen OAuth model (maps to latest Qwen coding backend)',
+    },
+    {
+      value: 'qwen/qwen3.6-plus',
+      label: 'Qwen 3.6 Plus (alias)',
+      description: 'Compatibility alias for coder-model on Qwen OAuth',
+    },
+    {
+      value: 'qwen/qwen3.5-plus',
+      label: 'Qwen 3.5 Plus (alias)',
+      description: 'Compatibility alias for coder-model on Qwen OAuth',
+    },
+  ]
+}
+
+function getNvidiaModelOptions(): ModelOption[] {
+  return [
+    getDefaultOptionForUser(),
+    {
+      value: 'nvidia/z-ai/glm5',
+      label: 'GLM 5',
+      description: 'General-purpose model with reasoning support on NVIDIA',
+    },
+    {
+      value: 'nvidia/minimaxai/minimax-m2.5',
+      label: 'MiniMax M2.5',
+      description: 'Fast and efficient model for iterative coding tasks',
+    },
+    {
+      value: 'nvidia/nvidia/nemotron-3-super-120b-a12b',
+      label: 'Nemotron 3 Super 120B',
+      description: 'High-capability NVIDIA model for advanced reasoning',
+    },
+    {
+      value: 'nvidia/moonshotai/kimi-k2.5',
+      label: 'Kimi K2.5',
+      description: 'Long-form reasoning model with strong general performance',
+    },
+    {
+      value: 'nvidia/meta/llama-3.1-405b-instruct',
+      label: 'Llama 3.1 405B Instruct',
+      description: 'Most capable NVIDIA-hosted model for complex reasoning',
+    },
+    {
+      value: 'nvidia/meta/llama-3.1-70b-instruct',
+      label: 'Llama 3.1 70B Instruct',
+      description: 'Balanced quality and speed for everyday coding tasks',
+    },
+    {
+      value: 'nvidia/meta/llama-3.1-8b-instruct',
+      label: 'Llama 3.1 8B Instruct',
+      description: 'Lower-latency model for lightweight requests',
+    },
+  ]
+}
+
+function getMistralModelOptions(): ModelOption[] {
+  return [
+    getDefaultOptionForUser(),
+    {
+      value: 'mistral/codestral-latest',
+      label: 'Codestral Latest',
+      description: 'Recommended latest Codestral model for coding tasks',
+    },
+    {
+      value: 'mistral/codestral-2508',
+      label: 'Codestral 2508',
+      description: 'Pinned Codestral snapshot for stable behavior',
+    },
+    {
+      value: 'mistral/codestral-2405',
+      label: 'Codestral 2405',
+      description: 'Legacy Codestral snapshot for compatibility',
+    },
+  ]
 }
 
 export function getDefaultOptionForUser(fastMode = false): ModelOption {
@@ -269,6 +430,26 @@ function getOpusPlanOption(): ModelOption {
 // @[MODEL LAUNCH]: Update the model picker lists below to include/reorder options for the new model.
 // Each user tier (ant, Max/Team Premium, Pro/Team Standard/Enterprise, PAYG 1P, PAYG 3P) has its own list.
 function getModelOptionsBase(fastMode = false): ModelOption[] {
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_GEMINI)) {
+    return getGeminiModelOptions()
+  }
+
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_QWEN)) {
+    return getQwenModelOptions()
+  }
+
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_NVIDIA)) {
+    return getNvidiaModelOptions()
+  }
+
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL)) {
+    return getMistralModelOptions()
+  }
+
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OPENAI)) {
+    return getOpenAIModelOptions()
+  }
+
   if (process.env.USER_TYPE === 'ant') {
     // Build options from antModels config
     const antModelOptions: ModelOption[] = getAntModels().map(m => ({

@@ -1,0 +1,4 @@
+import{R_ as z,T_ as G}from"./chunk-ksz63da1.js";import{Fia as D}from"./chunk-cs8pe1v7.js";function H(k){let g;try{g=new URL(k)}catch(A){throw Error(`Invalid URL format: ${k}`)}if(g.protocol!=="http:"&&g.protocol!=="https:")throw Error(`Invalid URL protocol: must use http:// or https://, got ${g.protocol}`)}async function K(k){try{let g=process.platform;if(g==="win32"){let{code:C}=await z("explorer",[k]);return C===0}let A=g==="darwin"?"open":"xdg-open",{code:B}=await z(A,[k]);return B===0}catch(g){return!1}}async function L(k){try{H(k);let g=process.env.BROWSER,A=process.platform;if(A==="win32"){if(g){let{code:C}=await z(g,[`"${k}"`]);return C===0}let{code:B}=await z("rundll32",["url,OpenURL",k],{});return B===0}else{let B=g||(A==="darwin"?"open":"xdg-open"),{code:C}=await z(B,[k]);return C===0}}catch(g){return!1}}var I=D(()=>{G()});
+export{K as $T,L as aU,I as bU};
+
+//# debugId=C9F930274E11209F64756E2164756E21

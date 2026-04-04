@@ -15,6 +15,7 @@ export interface PreflightCheckResult {
   sslHint?: string;
 }
 async function checkEndpoints(): Promise<PreflightCheckResult> {
+  const CONNECTIVITY_TIMEOUT_MS = 7000;
   try {
     const oauthConfig = getOauthConfig();
     const tokenUrl = new URL(oauthConfig.TOKEN_URL);
@@ -24,7 +25,8 @@ async function checkEndpoints(): Promise<PreflightCheckResult> {
         const response = await axios.get(url, {
           headers: {
             'User-Agent': getUserAgent()
-          }
+          },
+          timeout: CONNECTIVITY_TIMEOUT_MS
         });
         if (response.status !== 200) {
           const hostname = new URL(url).hostname;

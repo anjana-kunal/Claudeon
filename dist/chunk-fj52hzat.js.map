@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "sources": ["..\\node_modules\\@opentelemetry\\exporter-metrics-otlp-grpc\\build\\src\\OTLPMetricExporter.js", "..\\node_modules\\@opentelemetry\\exporter-metrics-otlp-grpc\\build\\src\\index.js"],
+  "sourcesContent": [
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.OTLPMetricExporter = void 0;\nconst exporter_metrics_otlp_http_1 = require(\"@opentelemetry/exporter-metrics-otlp-http\");\nconst otlp_grpc_exporter_base_1 = require(\"@opentelemetry/otlp-grpc-exporter-base\");\nconst otlp_transformer_1 = require(\"@opentelemetry/otlp-transformer\");\n/**\n * OTLP-gRPC metric exporter\n */\nclass OTLPMetricExporter extends exporter_metrics_otlp_http_1.OTLPMetricExporterBase {\n    constructor(config) {\n        super((0, otlp_grpc_exporter_base_1.createOtlpGrpcExportDelegate)((0, otlp_grpc_exporter_base_1.convertLegacyOtlpGrpcOptions)(config ?? {}, 'METRICS'), otlp_transformer_1.ProtobufMetricsSerializer, 'MetricsExportService', '/opentelemetry.proto.collector.metrics.v1.MetricsService/Export'), config);\n    }\n}\nexports.OTLPMetricExporter = OTLPMetricExporter;\n//# sourceMappingURL=OTLPMetricExporter.js.map",
+    "\"use strict\";\n/*\n * Copyright The OpenTelemetry Authors\n * SPDX-License-Identifier: Apache-2.0\n */\nObject.defineProperty(exports, \"__esModule\", { value: true });\nexports.OTLPMetricExporter = void 0;\nvar OTLPMetricExporter_1 = require(\"./OTLPMetricExporter\");\nObject.defineProperty(exports, \"OTLPMetricExporter\", { enumerable: true, get: function () { return OTLPMetricExporter_1.OTLPMetricExporter; } });\n//# sourceMappingURL=index.js.map"
+  ],
+  "mappings": "uOAKA,CAAO,SAAe,JAAS,OAAc,CAAE,MAAO,EAAK,CAAC,EACpD,qBAA0B,OAClC,IAAM,MACA,MACA,MAIN,MAAM,UAA2B,EAA6B,sBAAuB,CACjF,WAAW,CAAC,EAAQ,CAChB,OAAO,EAAG,EAA0B,+BAA+B,EAAG,EAA0B,8BAA8B,GAAU,CAAC,EAAG,SAAS,EAAG,EAAmB,0BAA2B,uBAAwB,iEAAiE,EAAG,CAAM,EAEhT,CACQ,qBAAqB,kBCb7B,OAAO,eAAe,EAAS,aAAc,CAAE,MAAO,EAAK,CAAC,EACpD,qBAA0B,OAClC,IAAI,MACJ,OAAO,eAAe,EAAS,qBAAsB,CAAE,WAAY,GAAM,IAAK,QAAS,EAAG,CAAE,OAAO,EAAqB,mBAAsB,CAAC",
+  "debugId": "096793363433609864756E2164756E21",
+  "names": []
+}

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\commands\\stickers\\stickers.ts"],
+  "sourcesContent": [
+    "import type { LocalCommandResult } from '../../types/command.js'\nimport { openBrowser } from '../../utils/browser.js'\n\nexport async function call(): Promise<LocalCommandResult> {\n  const url = 'https://www.stickermule.com/claudecode'\n  const success = await openBrowser(url)\n\n  if (success) {\n    return { type: 'text', value: 'Opening sticker page in browser…' }\n  } else {\n    return {\n      type: 'text',\n      value: `Failed to open browser. Visit: ${url}`,\n    }\n  }\n}\n"
+  ],
+  "mappings": "yfAGA,SAAsB,LAAI,JAAgC,LAIxD,HAFgB,AAAM,JADV,kCACyB,JAGnC,AAAO,LAAE,DAAM,CAAQ,MAAO,kCAAkC,EAEhE,WAAO,CACL,KAAM,OACN,MAAO,uEACT,eAZJ",
+  "debugId": "8AF89432C27624C964756E2164756E21",
+  "names": []
+}

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "sources": ["..\\utils\\slashCommandParsing.ts"],
+  "sourcesContent": [
+    "/**\n * Centralized utilities for parsing slash commands\n */\n\nexport type ParsedSlashCommand = {\n  commandName: string\n  args: string\n  isMcp: boolean\n}\n\n/**\n * Parses a slash command input string into its component parts\n *\n * @param input - The raw input string (should start with '/')\n * @returns Parsed command name, args, and MCP flag, or null if invalid\n *\n * @example\n * parseSlashCommand('/search foo bar')\n * // => { commandName: 'search', args: 'foo bar', isMcp: false }\n *\n * @example\n * parseSlashCommand('/mcp:tool (MCP) arg1 arg2')\n * // => { commandName: 'mcp:tool (MCP)', args: 'arg1 arg2', isMcp: true }\n */\nexport function parseSlashCommand(input: string): ParsedSlashCommand | null {\n  const trimmedInput = input.trim()\n\n  // Check if input starts with '/'\n  if (!trimmedInput.startsWith('/')) {\n    return null\n  }\n\n  // Remove the leading '/' and split by spaces\n  const withoutSlash = trimmedInput.slice(1)\n  const words = withoutSlash.split(' ')\n\n  if (!words[0]) {\n    return null\n  }\n\n  let commandName = words[0]\n  let isMcp = false\n  let argsStartIndex = 1\n\n  // Check for MCP commands (second word is '(MCP)')\n  if (words.length > 1 && words[1] === '(MCP)') {\n    commandName = commandName + ' (MCP)'\n    isMcp = true\n    argsStartIndex = 2\n  }\n\n  // Extract arguments (everything after command name)\n  const args = words.slice(argsStartIndex).join(' ')\n\n  return {\n    commandName,\n    args,\n    isMcp,\n  }\n}\n"
+  ],
+  "mappings": "0CAwBO,SAAS,CAAiB,CAAC,EAA0C,CAC1E,IAAM,EAAe,EAAM,KAAK,EAGhC,GAAI,CAAC,EAAa,WAAW,GAAG,EAC9B,OAAO,KAKT,IAAM,EADe,EAAa,MAAM,CAAC,EACd,MAAM,GAAG,EAEpC,GAAI,CAAC,EAAM,GACT,OAAO,KAGT,IAAI,EAAc,EAAM,GACpB,EAAQ,GACR,EAAiB,EAGrB,GAAI,EAAM,OAAS,GAAK,EAAM,KAAO,QACnC,EAAc,EAAc,SAC5B,EAAQ,GACR,EAAiB,EAInB,IAAM,EAAO,EAAM,MAAM,CAAc,EAAE,KAAK,GAAG,EAEjD,MAAO,CACL,cACA,OACA,OACF",
+  "debugId": "6C1A2A9EB0F4EE0664756E2164756E21",
+  "names": []
+}

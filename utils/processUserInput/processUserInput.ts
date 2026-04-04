@@ -278,6 +278,40 @@ function applyTruncation(content: string): string {
   return content
 }
 
+function normalizeLegacyDotCommandInput(
+  input: string,
+  commands: ProcessUserInputContext['options']['commands'],
+): string {
+  const leadingWhitespaceLength = input.length - input.trimStart().length
+  const trimmedStart = input.slice(leadingWhitespaceLength)
+
+  if (!trimmedStart.startsWith('.')) {
+    return input
+  }
+
+  // Keep common path and hidden-file patterns as plain prompt text.
+  if (
+    trimmedStart.startsWith('./') ||
+    trimmedStart.startsWith('.\\') ||
+    trimmedStart.startsWith('..')
+  ) {
+    return input
+  }
+
+  const match = trimmedStart.slice(1).match(/^([A-Za-z0-9:_-]+)([\s\S]*)$/)
+  if (!match) {
+    return input
+  }
+
+  const commandName = match[1]
+  const remainder = match[2] ?? ''
+  if (!commandName || !findCommand(commandName, commands)) {
+    return input
+  }
+
+  return `${input.slice(0, leadingWhitespaceLength)}/${commandName}${remainder}`
+}
+
 async function processUserInputBase(
   input: string | Array<ContentBlockParam>,
   mode: PromptInputMode,
@@ -347,6 +381,11 @@ async function processUserInputBase(
   if (inputString === null && mode !== 'prompt') {
     throw new Error(`Mode: ${mode} requires a string input.`)
   }
+
+  const slashInput =
+    mode === 'prompt' && inputString !== null
+      ? normalizeLegacyDotCommandInput(inputString, context.options.commands)
+      : inputString
 
   // Extract and convert image content to content blocks early
   // Keep track of IDs in order for message storage
@@ -426,8 +465,8 @@ async function processUserInputBase(
   // known-but-unsafe command (local-jsx UI or terminal-only), short-circuit
   // with a helpful message rather than letting the model see raw "/config".
   let effectiveSkipSlash = skipSlashCommands
-  if (bridgeOrigin && inputString !== null && inputString.startsWith('/')) {
-    const parsed = parseSlashCommand(inputString)
+  if (bridgeOrigin && slashInput !== null && slashInput.startsWith('/')) {
+    const parsed = parseSlashCommand(slashInput)
     const cmd = parsed
       ? findCommand(parsed.commandName, context.options.commands)
       : undefined
@@ -468,9 +507,9 @@ async function processUserInputBase(
     feature('ULTRAPLAN') &&
     mode === 'prompt' &&
     !context.options.isNonInteractiveSession &&
-    inputString !== null &&
+    slashInput !== null &&
     !effectiveSkipSlash &&
-    !inputString.startsWith('/') &&
+    !slashInput.startsWith('/') &&
     !context.getAppState().ultraplanSessionUrl &&
     !context.getAppState().ultraplanLaunching &&
     hasUltraplanKeyword(preExpansionInput ?? inputString)
@@ -496,7 +535,7 @@ async function processUserInputBase(
   const shouldExtractAttachments =
     !skipAttachments &&
     inputString !== null &&
-    (mode !== 'prompt' || effectiveSkipSlash || !inputString.startsWith('/'))
+    (mode !== 'prompt' || effectiveSkipSlash || !slashInput?.startsWith('/'))
 
   queryCheckpoint('query_attachment_loading_start')
   const attachmentMessages = shouldExtractAttachments
@@ -531,13 +570,13 @@ async function processUserInputBase(
   // Slash commands
   // Skip for remote bridge messages — input from CCR clients is plain text
   if (
-    inputString !== null &&
+    slashInput !== null &&
     !effectiveSkipSlash &&
-    inputString.startsWith('/')
+    slashInput.startsWith('/')
   ) {
     const { processSlashCommand } = await import('./processSlashCommand.js')
     const slashResult = await processSlashCommand(
-      inputString,
+      slashInput,
       precedingInputBlocks,
       imageContentBlocks,
       attachmentMessages,
