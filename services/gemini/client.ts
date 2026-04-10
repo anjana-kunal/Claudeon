@@ -13,6 +13,7 @@ import {
 } from './tokenStorage.js'
 import type { GeminiTokens } from './types.js'
 import { isEnvTruthy } from '../../utils/envUtils.js'
+import { sleep } from '../../utils/sleep.js'
 
 const GEMINI_DEFAULT_MODEL = 'gemini-2.5-pro'
 const GEMINI_DEFAULT_SYSTEM_PROMPT = 'You are a helpful assistant.'
@@ -26,7 +27,39 @@ const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000
 const GEMINI_API_VERSION_SUFFIX = '/v1beta/openai'
 const GEMINI_CODE_ASSIST_ENDPOINT = 'https://cloudcode-pa.googleapis.com'
 const GEMINI_CODE_ASSIST_API_VERSION = 'v1internal'
+const GEMINI_RATE_LIMIT_MAX_ATTEMPTS = 2
+const GEMINI_RATE_LIMIT_MIN_DELAY_MS = 1000
+const GEMINI_RATE_LIMIT_BASE_DELAY_MS = 2000
+const GEMINI_RATE_LIMIT_MAX_DELAY_MS = 120000
+const GEMINI_RATE_LIMIT_RESET_BUFFER_MS = 1500
 const UNSUPPORTED_GEMINI_SCHEMA_KEYS = new Set([
+  '$schema',
+  '$id',
+  '$defs',
+  '$comment',
+  'definitions',
+  'title',
+  'default',
+  'examples',
+  'example',
+  'deprecated',
+  'readOnly',
+  'writeOnly',
+  'const',
+  'not',
+  'contains',
+  'minContains',
+  'maxContains',
+  'prefixItems',
+  'unevaluatedItems',
+  'exclusiveMinimum',
+  'exclusiveMaximum',
+  'minimum',
+  'maximum',
+  'multipleOf',
+  'pattern',
+  'contentEncoding',
+  'contentMediaType',
   'propertyNames',
   'patternProperties',
   'unevaluatedProperties',
@@ -142,6 +175,115 @@ function isGeminiScopeError(error: unknown): boolean {
     (text.includes('missing required authentication credential') &&
       text.includes('unauthenticated'))
   )
+}
+
+function isGeminiRateLimitError(error: unknown): boolean {
+  const status = getErrorStatusCode(error)
+  if (status !== 429) {
+    return false
+  }
+
+  const text = getErrorSearchText(error)
+  if (!text) {
+    return true
+  }
+
+  return (
+    text.includes('resource_exhausted') ||
+    text.includes('rate_limit_exceeded') ||
+    text.includes('rate limit') ||
+    text.includes('quota')
+  )
+}
+
+function parseGeminiResetDelayMs(error: unknown): number | null {
+  const text = getErrorSearchText(error)
+  if (!text) {
+    return null
+  }
+
+  const patterns = [
+    /quota\s+will\s+reset\s+after\s*(\d+)\s*s\b/i,
+    /reset\s+after\s*(\d+)\s*s\b/i,
+    /retry\s+after\s*(\d+)\s*(?:s|sec|secs|second|seconds)\b/i,
+    /retry\s+in\s*(\d+)\s*(?:s|sec|secs|second|seconds)\b/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (!match || !match[1]) {
+      continue
+    }
+
+    const seconds = Number.parseInt(match[1], 10)
+    if (Number.isNaN(seconds) || seconds < 0) {
+      continue
+    }
+
+    return seconds * 1000 + GEMINI_RATE_LIMIT_RESET_BUFFER_MS
+  }
+
+  return null
+}
+
+function clampGeminiRetryDelay(ms: number): number {
+  return Math.max(
+    GEMINI_RATE_LIMIT_MIN_DELAY_MS,
+    Math.min(ms, GEMINI_RATE_LIMIT_MAX_DELAY_MS),
+  )
+}
+
+function getGeminiRetryDelayMs(error: unknown, attempt: number): number {
+  const resetDelay = parseGeminiResetDelayMs(error)
+  if (resetDelay !== null) {
+    return clampGeminiRetryDelay(resetDelay)
+  }
+
+  const exponential = Math.min(
+    GEMINI_RATE_LIMIT_BASE_DELAY_MS * Math.pow(2, attempt - 1),
+    GEMINI_RATE_LIMIT_MAX_DELAY_MS,
+  )
+  const jitter = Math.random() * 0.25 * exponential
+  return clampGeminiRetryDelay(exponential + jitter)
+}
+
+function writeGeminiRetryStatus(delayMs: number, attempt: number): void {
+  if (!process.stderr?.isTTY) {
+    return
+  }
+
+  const waitSeconds = Math.max(1, Math.ceil(delayMs / 1000))
+  const retriesLeft = Math.max(0, GEMINI_RATE_LIMIT_MAX_ATTEMPTS - attempt)
+  const retryLabel = retriesLeft === 1 ? 'retry' : 'retries'
+  process.stderr.write(
+    `\nGemini rate-limited. Waiting ${waitSeconds}s before retry (${retriesLeft} ${retryLabel} left)...\n`,
+  )
+}
+
+async function runWithGeminiRateLimitRetry<T>(
+  operation: () => Promise<T>,
+  signal?: AbortSignal,
+): Promise<T> {
+  for (let attempt = 1; attempt <= GEMINI_RATE_LIMIT_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      const isLastAttempt = attempt >= GEMINI_RATE_LIMIT_MAX_ATTEMPTS
+      if (!isGeminiRateLimitError(error) || isLastAttempt) {
+        throw error
+      }
+
+      const delayMs = getGeminiRetryDelayMs(error, attempt)
+      writeGeminiRetryStatus(delayMs, attempt)
+      await sleep(delayMs, signal, {
+        throwOnAbort: true,
+        abortError: () =>
+          new Error('Gemini request canceled while waiting for quota reset'),
+      })
+    }
+  }
+
+  throw new Error('Gemini retry loop exhausted unexpectedly')
 }
 
 function sanitizeGeminiSchemaNode(schema: unknown): unknown {
@@ -269,6 +411,63 @@ function resolveGeminiModel(requestedModel?: string): string {
   }
 
   return normalized || GEMINI_DEFAULT_MODEL
+}
+
+function getGeminiEmptyResponseFallbackModel(model: string): string | null {
+  const normalized = model.trim().toLowerCase()
+  if (!normalized) {
+    return null
+  }
+
+  if (normalized === 'gemini-2.5-pro') {
+    return null
+  }
+
+  if (normalized.startsWith('gemini-3') || normalized.includes('preview')) {
+    return 'gemini-2.5-pro'
+  }
+
+  return null
+}
+
+function getGeminiRateLimitFallbackModels(model: string): string[] {
+  const normalized = model.trim().toLowerCase()
+
+  if (normalized.startsWith('gemini-3') || normalized.includes('preview')) {
+    return ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro']
+  }
+
+  if (normalized === 'gemini-2.5-pro') {
+    return ['gemini-2.5-flash', 'gemini-2.5-flash-lite']
+  }
+
+  if (normalized === 'gemini-2.5-flash') {
+    return ['gemini-2.5-flash-lite', 'gemini-2.5-pro']
+  }
+
+  if (normalized === 'gemini-2.5-flash-lite') {
+    return ['gemini-2.5-flash', 'gemini-2.5-pro']
+  }
+
+  return []
+}
+
+function isGeminiModelUnavailableError(error: unknown): boolean {
+  const status = getErrorStatusCode(error)
+  if (status === 404) {
+    return true
+  }
+
+  const text = getErrorSearchText(error)
+  if (!text) {
+    return false
+  }
+
+  return (
+    text.includes('requested entity was not found') ||
+    text.includes('model not found') ||
+    text.includes('unknown model')
+  )
 }
 
 function normalizeGeminiBaseUrl(url: string): string {
@@ -401,6 +600,15 @@ type WrappedResponse = {
   model: string
   stop_reason: string | null
   usage: { input_tokens: number; output_tokens: number }
+}
+
+function isWrappedResponseEmpty(response: WrappedResponse): boolean {
+  return !response.content.some(block => {
+    if (block.type === 'tool_use') {
+      return true
+    }
+    return block.type === 'text' && block.text.trim().length > 0
+  })
 }
 
 type AnthropicLikeMessage = {
@@ -1441,97 +1649,212 @@ export function createGeminiAnthropicWrapper(): Anthropic {
           const tools = convertAnthropicToolsToGemini(
             params.tools as AnthropicToolSpec[] | undefined,
           )
-          const toolConfig = convertAnthropicToolChoiceToGemini(
-            params.tool_choice,
-          )
-
-          let response: GeminiCodeAssistGenerateResponse
-          try {
-            response = await runWithGeminiOAuthRecovery(async accessToken => {
-              const project = await resolveGeminiCodeAssistProjectId(
-                accessToken,
-                requestOptions,
-              )
-
-              const requestBody: GeminiCodeAssistGenerateRequest = {
-                model,
-                ...(project ? { project } : {}),
-                user_prompt_id: `cc-${Date.now()}`,
-                request: {
-                  contents,
-                  ...(systemPrompt.trim().length > 0
-                    ? {
-                        systemInstruction: {
-                          role: 'user',
-                          parts: [{ text: systemPrompt }],
-                        },
-                      }
-                    : {}),
-                  ...(tools ? { tools } : {}),
-                  ...(toolConfig ? { toolConfig } : {}),
-                  generationConfig: {
-                    maxOutputTokens: params.max_tokens,
-                    ...(params.temperature !== undefined
-                      ? { temperature: params.temperature }
-                      : {}),
+          const toolConfig =
+            convertAnthropicToolChoiceToGemini(params.tool_choice) ??
+            (tools
+              ? {
+                  functionCallingConfig: {
+                    mode: 'AUTO' as const,
                   },
-                },
-              }
+                }
+              : undefined)
 
-              return await postGeminiCodeAssist<GeminiCodeAssistGenerateResponse>(
-                accessToken,
-                'generateContent',
-                requestBody,
-                requestOptions,
-              )
-            })
-          } catch (error) {
-            if (getErrorStatusCode(error) !== 400 || !tools) {
-              throw error
-            }
-
-            response = await runWithGeminiOAuthRecovery(async accessToken => {
-              const project = await resolveGeminiCodeAssistProjectId(
-                accessToken,
-                requestOptions,
-              )
-
-              const requestBody: GeminiCodeAssistGenerateRequest = {
-                model,
-                ...(project ? { project } : {}),
-                user_prompt_id: `cc-${Date.now()}`,
-                request: {
-                  contents,
-                  ...(systemPrompt.trim().length > 0
-                    ? {
-                        systemInstruction: {
-                          role: 'user',
-                          parts: [{ text: systemPrompt }],
-                        },
-                      }
-                    : {}),
-                  generationConfig: {
-                    maxOutputTokens: params.max_tokens,
-                    ...(params.temperature !== undefined
-                      ? { temperature: params.temperature }
-                      : {}),
-                  },
-                },
-              }
-
-              return await postGeminiCodeAssist<GeminiCodeAssistGenerateResponse>(
-                accessToken,
-                'generateContent',
-                requestBody,
-                requestOptions,
-              )
-            })
+          const generationConfig: GeminiCodeAssistGenerateRequest['request']['generationConfig'] = {
+            maxOutputTokens: params.max_tokens,
+            ...(params.temperature !== undefined
+              ? { temperature: params.temperature }
+              : {}),
           }
 
-          const wrappedResponse = convertGeminiCodeAssistToAnthropic(
+          const systemInstruction =
+            systemPrompt.trim().length > 0
+              ? {
+                  role: 'user' as const,
+                  parts: [{ text: systemPrompt }],
+                }
+              : undefined
+
+          const sendCodeAssistRequest = async (
+            accessToken: string,
+            requestOverrides?: {
+              model?: string
+              tools?: GeminiCodeAssistGenerateRequest['request']['tools']
+              toolConfig?: GeminiCodeAssistGenerateRequest['request']['toolConfig']
+            },
+          ): Promise<GeminiCodeAssistGenerateResponse> => {
+            const project = await resolveGeminiCodeAssistProjectId(
+              accessToken,
+              requestOptions,
+            )
+
+            const requestBody: GeminiCodeAssistGenerateRequest = {
+              model: requestOverrides?.model ?? model,
+              ...(project ? { project } : {}),
+              user_prompt_id: `cc-${Date.now()}`,
+              request: {
+                contents,
+                ...(systemInstruction ? { systemInstruction } : {}),
+                ...(requestOverrides?.tools ? { tools: requestOverrides.tools } : {}),
+                ...(requestOverrides?.toolConfig
+                  ? { toolConfig: requestOverrides.toolConfig }
+                  : {}),
+                generationConfig,
+              },
+            }
+
+            return await postGeminiCodeAssist<GeminiCodeAssistGenerateResponse>(
+              accessToken,
+              'generateContent',
+              requestBody,
+              requestOptions,
+            )
+          }
+
+          const hasTools = !!tools && tools.length > 0
+
+          const runCodeAssistWithCompatibilityFallback = async (
+            targetModel: string,
+            requestOverrides?: {
+              tools?: GeminiCodeAssistGenerateRequest['request']['tools']
+              toolConfig?: GeminiCodeAssistGenerateRequest['request']['toolConfig']
+            },
+          ): Promise<GeminiCodeAssistGenerateResponse> => {
+            try {
+              return await runWithGeminiOAuthRecovery(accessToken =>
+                sendCodeAssistRequest(accessToken, {
+                  model: targetModel,
+                  ...requestOverrides,
+                }),
+              )
+            } catch (error) {
+              const hasRequestTools =
+                !!requestOverrides?.tools && requestOverrides.tools.length > 0
+
+              if (getErrorStatusCode(error) !== 400 || !hasRequestTools) {
+                throw error
+              }
+
+              return await runWithGeminiOAuthRecovery(accessToken =>
+                sendCodeAssistRequest(accessToken, { model: targetModel }),
+              )
+            }
+          }
+
+          const runCodeAssistWithRateLimitFallback = async (
+            preferredModel: string,
+            requestOverrides?: {
+              tools?: GeminiCodeAssistGenerateRequest['request']['tools']
+              toolConfig?: GeminiCodeAssistGenerateRequest['request']['toolConfig']
+            },
+          ): Promise<{
+            response: GeminiCodeAssistGenerateResponse
+            modelUsed: string
+          }> => {
+            const candidates = [
+              preferredModel,
+              ...getGeminiRateLimitFallbackModels(preferredModel),
+            ]
+            const dedupedCandidates = [...new Set(candidates)]
+            let lastRecoverableError: unknown = null
+
+            for (const candidateModel of dedupedCandidates) {
+              try {
+                const response = await runCodeAssistWithCompatibilityFallback(
+                  candidateModel,
+                  requestOverrides,
+                )
+                return { response, modelUsed: candidateModel }
+              } catch (error) {
+                if (
+                  getErrorStatusCode(error) === 429 ||
+                  isGeminiModelUnavailableError(error)
+                ) {
+                  lastRecoverableError = error
+                  continue
+                }
+                throw error
+              }
+            }
+
+            throw (
+              lastRecoverableError ??
+              new Error('Gemini request failed after model fallback attempts.')
+            )
+          }
+
+          let activeModel = model
+          let initialResult = await runCodeAssistWithRateLimitFallback(model, {
+            tools,
+            toolConfig,
+          })
+          let response = initialResult.response
+          activeModel = initialResult.modelUsed
+
+          let wrappedResponse = convertGeminiCodeAssistToAnthropic(
             response,
-            model,
+            activeModel,
           )
+
+          if (isWrappedResponseEmpty(wrappedResponse) && hasTools) {
+            const forcedAnyResult = await runCodeAssistWithRateLimitFallback(
+              activeModel,
+              {
+                tools,
+                toolConfig: {
+                  functionCallingConfig: {
+                    mode: 'ANY',
+                  },
+                },
+              },
+            )
+            response = forcedAnyResult.response
+            activeModel = forcedAnyResult.modelUsed
+            wrappedResponse = convertGeminiCodeAssistToAnthropic(
+              response,
+              activeModel,
+            )
+          }
+
+          if (isWrappedResponseEmpty(wrappedResponse) && hasTools) {
+            const noToolsResult = await runCodeAssistWithRateLimitFallback(
+              activeModel,
+            )
+            response = noToolsResult.response
+            activeModel = noToolsResult.modelUsed
+            wrappedResponse = convertGeminiCodeAssistToAnthropic(
+              response,
+              activeModel,
+            )
+          }
+
+          const fallbackModel = getGeminiEmptyResponseFallbackModel(activeModel)
+          if (isWrappedResponseEmpty(wrappedResponse) && fallbackModel) {
+            const fallbackResult = await runCodeAssistWithRateLimitFallback(
+              fallbackModel,
+              hasTools
+                ? {
+                    tools,
+                    toolConfig: {
+                      functionCallingConfig: {
+                        mode: 'ANY',
+                      },
+                    },
+                  }
+                : undefined,
+            )
+            response = fallbackResult.response
+            activeModel = fallbackResult.modelUsed
+            wrappedResponse = convertGeminiCodeAssistToAnthropic(
+              response,
+              activeModel,
+            )
+          }
+
+          if (isWrappedResponseEmpty(wrappedResponse)) {
+            throw new Error(
+              'Gemini returned an empty response. Try a different Gemini model (for example gemini/gemini-2.5-pro) and retry.',
+            )
+          }
 
           if (params.stream) {
             return {
@@ -1677,11 +2000,15 @@ export function createGeminiAnthropicWrapper(): Anthropic {
       }
 
       if (params.stream) {
-        const withResponsePromise = execute() as Promise<{
-          data: AsyncIterable<unknown>
-          request_id?: string
-          response: Response
-        }>
+        const withResponsePromise = runWithGeminiRateLimitRetry(
+          execute as () =>
+            Promise<{
+              data: AsyncIterable<unknown>
+              request_id?: string
+              response: Response
+            }>,
+          requestOptions?.signal,
+        )
         const apiPromise = withResponsePromise.then(result => result.data) as Promise<
           AsyncIterable<unknown>
         > & {
@@ -1695,7 +2022,10 @@ export function createGeminiAnthropicWrapper(): Anthropic {
         return apiPromise
       }
 
-      return execute()
+      return runWithGeminiRateLimitRetry(
+        execute as () => Promise<WrappedResponse>,
+        requestOptions?.signal,
+      )
     },
   }
 

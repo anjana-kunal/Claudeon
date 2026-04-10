@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react'
-import OpenAI from 'openai'
 import { Box, Text } from '../ink.js'
 import { updateSettingsForSource } from '../utils/settings/settings.js'
 import { useKeybinding } from '../keybindings/useKeybinding.js'
@@ -23,8 +22,10 @@ const MISTRAL_PROVIDER_ENV_KEY = 'CLAUDE_CODE_USE_MISTRAL'
 const MISTRAL_API_KEY_ENV_KEY = 'MISTRAL_API_KEY'
 const MISTRAL_BASE_URL_ENV_KEY = 'MISTRAL_BASE_URL'
 const MISTRAL_MODEL_ENV_KEY = 'MISTRAL_MODEL'
-const DEFAULT_MISTRAL_BASE_URL = 'https://codestral.mistral.ai/v1'
+const DEFAULT_MISTRAL_BASE_URL = 'https://api.mistral.ai/v1'
 const DEFAULT_MISTRAL_MODEL = 'codestral-latest'
+const MISTRAL_VALIDATION_MODEL = 'mistral-large-2411'
+const MISTRAL_CONVERSATIONS_PATH = '/conversations'
 const API_KEY_PROMPT = 'Mistral API key > '
 const MISTRAL_VALIDATION_TIMEOUT_MS = 12000
 
@@ -49,6 +50,21 @@ function normalizeMistralBaseUrl(url: string): string {
   return withoutTrailingSlash.endsWith('/v1')
     ? withoutTrailingSlash
     : `${withoutTrailingSlash}/v1`
+}
+
+function isLegacyCodestralBaseUrl(url: string | undefined): boolean {
+  if (!url) {
+    return false
+  }
+  return url.trim().toLowerCase().includes('codestral.mistral.ai')
+}
+
+function resolveMistralBaseUrlForValidation(): string {
+  const configured = process.env[MISTRAL_BASE_URL_ENV_KEY]?.trim()
+  if (!configured || isLegacyCodestralBaseUrl(configured)) {
+    return normalizeMistralBaseUrl(DEFAULT_MISTRAL_BASE_URL)
+  }
+  return normalizeMistralBaseUrl(configured)
 }
 
 function normalizeMistralApiKeyInput(rawValue: string): string {
@@ -180,30 +196,85 @@ async function withTimeout<T>(
   }
 }
 
+function stringifyUnknown(value: unknown): string {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (value === undefined || value === null) {
+    return ''
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function createMistralValidationHttpError(
+  status: number,
+  data: unknown,
+): Error & {
+  status: number
+  response: { status: number; data: unknown }
+} {
+  const detail = stringifyUnknown(data)
+  const error = new Error(
+    detail
+      ? `Mistral validation failed (${status}): ${detail}`
+      : `Mistral validation failed (${status})`,
+  ) as Error & {
+    status: number
+    response: { status: number; data: unknown }
+  }
+  error.status = status
+  error.response = { status, data }
+  return error
+}
+
 async function validateMistralApiKey(apiKey: string): Promise<void> {
-  const client = new OpenAI({
-    apiKey,
-    baseURL: normalizeMistralBaseUrl(
-      process.env[MISTRAL_BASE_URL_ENV_KEY] || DEFAULT_MISTRAL_BASE_URL,
-    ),
-    timeout: MISTRAL_VALIDATION_TIMEOUT_MS,
-    maxRetries: 0,
-  })
+  const baseUrl = resolveMistralBaseUrlForValidation()
+  const validationUrl = `${baseUrl}${MISTRAL_CONVERSATIONS_PATH}`
 
   const probeModel =
-    (process.env[MISTRAL_MODEL_ENV_KEY] || DEFAULT_MISTRAL_MODEL)
+    (process.env[MISTRAL_MODEL_ENV_KEY] || MISTRAL_VALIDATION_MODEL)
       .replace(/^mistral\//, '')
       .replace(/^openai\//, '')
-      .trim() || DEFAULT_MISTRAL_MODEL
+      .trim() || MISTRAL_VALIDATION_MODEL
 
   try {
     await withTimeout(
-      client.chat.completions.create({
-        model: probeModel,
-        messages: [{ role: 'user', content: 'ping' }],
-        max_tokens: 1,
-        temperature: 0,
-      }),
+      (async () => {
+        const response = await fetch(validationUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: probeModel,
+            inputs: [{ role: 'user', content: 'ping' }],
+            tools: [],
+            completion_args: {
+              max_tokens: 1,
+              temperature: 0,
+            },
+          }),
+        })
+
+        const rawBody = await response.text()
+        let parsedBody: unknown = undefined
+        if (rawBody.length > 0) {
+          try {
+            parsedBody = JSON.parse(rawBody)
+          } catch {
+            parsedBody = rawBody
+          }
+        }
+
+        if (!response.ok) {
+          throw createMistralValidationHttpError(response.status, parsedBody)
+        }
+      })(),
       MISTRAL_VALIDATION_TIMEOUT_MS,
       'Mistral validation timed out.',
     )
@@ -229,7 +300,10 @@ function persistMistralProviderSelection(apiKey: string): void {
   }
   envPatch[MISTRAL_PROVIDER_ENV_KEY] = '1'
   envPatch[MISTRAL_API_KEY_ENV_KEY] = apiKey
-  if (!process.env[MISTRAL_BASE_URL_ENV_KEY]?.trim()) {
+  if (
+    !process.env[MISTRAL_BASE_URL_ENV_KEY]?.trim() ||
+    isLegacyCodestralBaseUrl(process.env[MISTRAL_BASE_URL_ENV_KEY])
+  ) {
     envPatch[MISTRAL_BASE_URL_ENV_KEY] = DEFAULT_MISTRAL_BASE_URL
   }
   if (!process.env[MISTRAL_MODEL_ENV_KEY]?.trim()) {
@@ -250,7 +324,10 @@ function persistMistralProviderSelection(apiKey: string): void {
   }
   process.env[MISTRAL_PROVIDER_ENV_KEY] = '1'
   process.env[MISTRAL_API_KEY_ENV_KEY] = apiKey
-  if (!process.env[MISTRAL_BASE_URL_ENV_KEY]?.trim()) {
+  if (
+    !process.env[MISTRAL_BASE_URL_ENV_KEY]?.trim() ||
+    isLegacyCodestralBaseUrl(process.env[MISTRAL_BASE_URL_ENV_KEY])
+  ) {
     process.env[MISTRAL_BASE_URL_ENV_KEY] = DEFAULT_MISTRAL_BASE_URL
   }
   if (!process.env[MISTRAL_MODEL_ENV_KEY]?.trim()) {
@@ -267,6 +344,7 @@ export function MistralAuthFlow({ onSuccess, onBack }: Props): React.ReactNode {
     20,
     useTerminalSize().columns - API_KEY_PROMPT.length - 1,
   )
+  const baseUrlForDisplay = resolveMistralBaseUrlForValidation()
 
   useKeybinding(
     'escape',
@@ -352,10 +430,10 @@ export function MistralAuthFlow({ onSuccess, onBack }: Props): React.ReactNode {
 
   return (
     <Box flexDirection="column" gap={1} marginTop={1}>
-      <Text bold>Connect Mistral API (Codestral)</Text>
-      <Text>Enter your Mistral API key to use Codestral models.</Text>
+      <Text bold>Connect Mistral API</Text>
+      <Text>Enter your Mistral API key.</Text>
       <Text dimColor>
-        Chat endpoint: {(process.env.MISTRAL_BASE_URL || DEFAULT_MISTRAL_BASE_URL) + '/chat/completions'}
+        Validation endpoint: {baseUrlForDisplay + MISTRAL_CONVERSATIONS_PATH}
       </Text>
       {status.state === 'error' && <Text color="red">{status.message}</Text>}
       <Box>

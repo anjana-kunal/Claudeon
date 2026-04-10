@@ -78,7 +78,7 @@ Default mode is Anthropic first-party. You can also enable third-party providers
 | Gemini | `CLAUDE_CODE_USE_GEMINI=true` | `GEMINI_API_KEY` / `GOOGLE_API_KEY` or Google OAuth login | `GEMINI_MODEL` (or `ANTHROPIC_MODEL`) |
 | Qwen | `CLAUDE_CODE_USE_QWEN=true` | qwen.ai OAuth login | `QWEN_MODEL` (or `ANTHROPIC_MODEL`) |
 | NVIDIA | `CLAUDE_CODE_USE_NVIDIA=true` | `NVIDIA_API_KEY` | `NVIDIA_MODEL` (or `ANTHROPIC_MODEL`) |
-| Mistral Codestral | `CLAUDE_CODE_USE_MISTRAL=true` | `MISTRAL_API_KEY` | `MISTRAL_MODEL` (or `ANTHROPIC_MODEL`) |
+| Mistral API | `CLAUDE_CODE_USE_MISTRAL=true` | `MISTRAL_API_KEY` | `MISTRAL_MODEL` (or `ANTHROPIC_MODEL`) |
 | AWS Bedrock | `CLAUDE_CODE_USE_BEDROCK=true` | AWS credentials + region | `ANTHROPIC_MODEL` |
 | Google Vertex | `CLAUDE_CODE_USE_VERTEX=true` | GCP auth + project/region | `ANTHROPIC_MODEL` |
 | Microsoft Foundry | `CLAUDE_CODE_USE_FOUNDRY=true` | Foundry auth vars | `ANTHROPIC_MODEL` |

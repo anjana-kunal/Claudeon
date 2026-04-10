@@ -444,7 +444,7 @@ function OAuthStatusMessage(t0) {
             label: <Text>Google API / AI Studio key ·{" "}<Text dimColor={true}>Use your Gemini API key</Text>{"\n"}</Text>,
             value: "google_api"
           }, {
-            label: <Text>Mistral API / Codestral ·{" "}<Text dimColor={true}>Use your Mistral API key</Text>{"\n"}</Text>,
+            label: <Text>Mistral API ·{" "}<Text dimColor={true}>Use your Mistral API key</Text>{"\n"}</Text>,
             value: "mistral"
           }, {
             label: <Text>Qwen / qwen.ai ·{" "}<Text dimColor={true}>Sign in with your Qwen account</Text>{"\n"}</Text>,

@@ -248,7 +248,7 @@ export function buildAPIProviderProperties(): Property[] {
       vertex: 'Google Vertex AI',
       foundry: 'Microsoft Foundry',
       openrouter: 'OpenRouter',
-      openai: isMistralProvider ? 'Mistral API / Codestral' : 'OpenAI / ChatGPT',
+      openai: isMistralProvider ? 'Mistral API' : 'OpenAI / ChatGPT',
       gemini: hasGeminiApiKey ? 'Google API / AI Studio (Gemini)' : 'Google Gemini (web auth)',
       qwen: 'Qwen',
       nvidia: 'NVIDIA build.nvidia.com'

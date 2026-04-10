@@ -8,9 +8,9 @@ import {
 import { isEnvTruthy } from '../../utils/envUtils.js'
 
 const MISTRAL_DEFAULT_MODEL = 'codestral-latest'
-const MISTRAL_DEFAULT_BASE_URL = 'https://codestral.mistral.ai/v1'
+const MISTRAL_DEFAULT_BASE_URL = 'https://api.mistral.ai/v1'
 const MISTRAL_REAUTH_MESSAGE =
-  'Mistral authentication failed. Check MISTRAL_API_KEY and rerun /login with "Mistral API / Codestral".'
+  'Mistral authentication failed. Check MISTRAL_API_KEY and rerun /login with "Mistral API".'
 const MISTRAL_API_VERSION_SUFFIX = '/v1'
 
 function getErrorStatusCode(error: unknown): number | undefined {

@@ -436,13 +436,13 @@ export async function getAnthropicClient({
     return createNvidiaAnthropicWrapper() as unknown as Anthropic
   }
 
-  // Mistral support (API key auth via codestral.mistral.ai OpenAI-compatible API)
+  // Mistral support (API key auth via api.mistral.ai OpenAI-compatible API)
   if (isEnvTruthy(process.env.CLAUDE_CODE_USE_MISTRAL)) {
     const hasApiKey = !!process.env.MISTRAL_API_KEY?.trim()
     if (!hasApiKey) {
       throw new Error(
         'Not authenticated with Mistral.\n' +
-          'Set MISTRAL_API_KEY, or run `claudecode` and select "Mistral API / Codestral" from /login.',
+          'Set MISTRAL_API_KEY, or run `claudecode` and select "Mistral API" from /login.',
       )
     }
 
