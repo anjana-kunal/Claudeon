@@ -14,6 +14,7 @@ import { createUserMessage } from '../../utils/messages.js'
 import { getMainLoopModel, getSmallFastModel } from '../../utils/model/model.js'
 import { jsonParse, jsonStringify } from '../../utils/slowOperations.js'
 import { asSystemPrompt } from '../../utils/systemPromptType.js'
+import { WEB_FETCH_TOOL_NAME } from '../WebFetchTool/prompt.js'
 import { getWebSearchPrompt, WEB_SEARCH_TOOL_NAME } from './prompt.js'
 import {
   getToolUseSummary,
@@ -208,13 +209,26 @@ export const WebSearchTool = buildTool({
   },
   async checkPermissions(_input): Promise<PermissionResult> {
     return {
-      behavior: 'passthrough',
-      message: 'WebSearchTool requires permission.',
+      behavior: 'ask',
+      message:
+        'Claude is requesting browser access to search the web. Allow this request?',
       suggestions: [
         {
           type: 'addRules',
-          rules: [{ toolName: WEB_SEARCH_TOOL_NAME }],
+          rules: [
+            { toolName: WEB_SEARCH_TOOL_NAME },
+            { toolName: WEB_FETCH_TOOL_NAME },
+          ],
           behavior: 'allow',
+          destination: 'localSettings',
+        },
+        {
+          type: 'addRules',
+          rules: [
+            { toolName: WEB_SEARCH_TOOL_NAME },
+            { toolName: WEB_FETCH_TOOL_NAME },
+          ],
+          behavior: 'deny',
           destination: 'localSettings',
         },
       ],

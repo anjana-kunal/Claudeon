@@ -1,4 +1,0 @@
-import{TH as U,WH as V,_H as B,cI as G,dI as Q,eI as W,fI as D}from"./chunk-nvfqakxv.js";import{GT as _}from"./chunk-anqkwm0v.js";import{Qga as O,qha as Z}from"./chunk-cn83pdqq.js";import{Bia as X,Fia as Y}from"./chunk-cs8pe1v7.js";async function $(j,q){if(K)return;if(K=!0,!j.isBypassPermissionsModeAvailable)return;if(!await U())return;q((E)=>{return{...E,toolPermissionContext:V(E.toolPermissionContext)}})}function F(){K=!1}function I(){let j=G((w)=>w.toolPermissionContext),q=Q();H.useEffect(()=>{if(O())return;$(j,q)},[])}async function h(j,q,w){}function k(){b=!1}function v(){let j=G((z)=>z.mainLoopModel),q=G((z)=>z.mainLoopModelForSession),w=G((z)=>z.fastMode),E=Q(),T=W(),J=H.useRef(!0);H.useEffect(()=>{if(O())return;if(J.current)J.current=!1;else k();h(T.getState().toolPermissionContext,E,w)},[j,q,w])}var H,K=!1,b=!1;var y=Y(()=>{D();Z();B();H=X(_(),1)});
-export{$ as dg,F as eg,I as fg,v as gg,y as hg};
-
-//# debugId=7744A7530F54EDF664756E2164756E21

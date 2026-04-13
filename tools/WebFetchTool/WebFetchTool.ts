@@ -5,7 +5,6 @@ import { formatFileSize } from '../../utils/format.js'
 import { lazySchema } from '../../utils/lazySchema.js'
 import type { PermissionDecision } from '../../utils/permissions/PermissionResult.js'
 import { getRuleByContentsForTool } from '../../utils/permissions/permissions.js'
-import { isPreapprovedHost } from './preapproved.js'
 import { DESCRIPTION, WEB_FETCH_TOOL_NAME } from './prompt.js'
 import {
   getToolUseSummary,
@@ -105,21 +104,6 @@ export const WebFetchTool = buildTool({
     const appState = context.getAppState()
     const permissionContext = appState.toolPermissionContext
 
-    // Check if the hostname is in the preapproved list
-    try {
-      const { url } = input as { url: string }
-      const parsedUrl = new URL(url)
-      if (isPreapprovedHost(parsedUrl.hostname, parsedUrl.pathname)) {
-        return {
-          behavior: 'allow',
-          updatedInput: input,
-          decisionReason: { type: 'other', reason: 'Preapproved host' },
-        }
-      }
-    } catch {
-      // If URL parsing fails, continue with normal permission checks
-    }
-
     // Check for a rule specific to the tool input (matching hostname)
     const ruleContent = webFetchToolInputToPermissionRuleContent(input)
 
@@ -147,7 +131,8 @@ export const WebFetchTool = buildTool({
     if (askRule) {
       return {
         behavior: 'ask',
-        message: `Claude requested permissions to use ${WebFetchTool.name}, but you haven't granted it yet.`,
+        message:
+          'Claude is requesting browser access to fetch web content. Allow this request?',
         decisionReason: {
           type: 'rule',
           rule: askRule,
@@ -174,7 +159,8 @@ export const WebFetchTool = buildTool({
 
     return {
       behavior: 'ask',
-      message: `Claude requested permissions to use ${WebFetchTool.name}, but you haven't granted it yet.`,
+      message:
+        'Claude is requesting browser access to fetch web content. Allow this request?',
       suggestions: buildSuggestions(ruleContent),
     }
   },

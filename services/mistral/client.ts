@@ -207,6 +207,120 @@ function prependSystemPrompt(
   return [{ role: 'system', content: trimmed }, ...messages]
 }
 
+function extractOpenAIContentText(content: unknown): string {
+  if (typeof content === 'string') {
+    return content
+  }
+
+  if (!Array.isArray(content)) {
+    return ''
+  }
+
+  const parts: string[] = []
+  for (const item of content) {
+    if (typeof item === 'string') {
+      parts.push(item)
+      continue
+    }
+    if (!item || typeof item !== 'object') {
+      continue
+    }
+    const record = item as Record<string, unknown>
+    if (typeof record.text === 'string') {
+      parts.push(record.text)
+      continue
+    }
+    if (typeof record.refusal === 'string') {
+      parts.push(record.refusal)
+    }
+  }
+
+  return parts.join('\n').trim()
+}
+
+function convertToolCallHistoryToAssistantText(
+  message: OpenAI.Chat.ChatCompletionAssistantMessageParam,
+): string {
+  const contentText = extractOpenAIContentText(message.content)
+  const toolCalls = Array.isArray(message.tool_calls) ? message.tool_calls : []
+
+  if (toolCalls.length === 0) {
+    return contentText
+  }
+
+  const toolCallSummary = toolCalls
+    .map(toolCall => {
+      const name = toolCall.function?.name
+      return name ? `[Tool call omitted: ${name}]` : '[Tool call omitted]'
+    })
+    .join('\n')
+
+  return [contentText, toolCallSummary].filter(Boolean).join('\n').trim()
+}
+
+function sanitizeMessagesForMistralNoTools(
+  messages: OpenAI.Chat.ChatCompletionMessageParam[],
+): OpenAI.Chat.ChatCompletionMessageParam[] {
+  const sanitized: OpenAI.Chat.ChatCompletionMessageParam[] = []
+
+  for (const message of messages) {
+    switch (message.role) {
+      case 'assistant': {
+        const text = convertToolCallHistoryToAssistantText(
+          message as OpenAI.Chat.ChatCompletionAssistantMessageParam,
+        )
+        if (!text) {
+          continue
+        }
+        sanitized.push({ role: 'assistant', content: text })
+        break
+      }
+      case 'tool': {
+        const toolMessage = message as OpenAI.Chat.ChatCompletionToolMessageParam
+        const toolText = extractOpenAIContentText(toolMessage.content)
+        if (!toolText) {
+          continue
+        }
+        sanitized.push({
+          role: 'user',
+          content: `[Tool result]: ${toolText}`,
+        })
+        break
+      }
+      case 'system': {
+        const systemMessage =
+          message as OpenAI.Chat.ChatCompletionSystemMessageParam
+        const systemText = extractOpenAIContentText(systemMessage.content)
+        if (!systemText) {
+          continue
+        }
+        sanitized.push({ role: 'system', content: systemText })
+        break
+      }
+      case 'user': {
+        const userMessage = message as OpenAI.Chat.ChatCompletionUserMessageParam
+        const userText = extractOpenAIContentText(userMessage.content)
+        if (!userText) {
+          continue
+        }
+        sanitized.push({ role: 'user', content: userText })
+        break
+      }
+      default: {
+        const fallbackText = extractOpenAIContentText(
+          (message as { content?: unknown }).content,
+        )
+        if (!fallbackText) {
+          continue
+        }
+        sanitized.push({ role: 'user', content: fallbackText })
+      }
+    }
+  }
+
+  return sanitized
+}
+
 function createStreamingResponse(
   stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>,
   model: string,
@@ -378,6 +492,10 @@ export function createMistralAnthropicWrapper(): Anthropic {
         )
         const systemPrompt = resolveMistralSystemPrompt(params.system)
         const openaiMessages = prependSystemPrompt(baseOpenAIMessages, systemPrompt)
+        const openaiMessagesWithoutTools = prependSystemPrompt(
+          sanitizeMessagesForMistralNoTools(baseOpenAIMessages),
+          systemPrompt,
+        )
 
         const tools = params.tools
           ? convertAnthropicToolsToOpenAI(params.tools)
@@ -386,7 +504,10 @@ export function createMistralAnthropicWrapper(): Anthropic {
         if (params.stream) {
           const streamRequest: OpenAI.Chat.ChatCompletionCreateParamsStreaming = {
             model,
-            messages: openaiMessages,
+            messages:
+              tools && tools.length > 0
+                ? openaiMessages
+                : openaiMessagesWithoutTools,
             max_tokens: params.max_tokens,
             stream: true,
           }
@@ -418,7 +539,7 @@ export function createMistralAnthropicWrapper(): Anthropic {
               stream = await (await getClient()).chat.completions.create(
                 {
                   model,
-                  messages: openaiMessages,
+                  messages: openaiMessagesWithoutTools,
                   max_tokens: params.max_tokens,
                   stream: true,
                   ...(params.temperature !== undefined && {
@@ -447,7 +568,10 @@ export function createMistralAnthropicWrapper(): Anthropic {
 
         const completionRequest: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
           model,
-          messages: openaiMessages,
+          messages:
+            tools && tools.length > 0
+              ? openaiMessages
+              : openaiMessagesWithoutTools,
           max_tokens: params.max_tokens,
         }
 
@@ -478,7 +602,7 @@ export function createMistralAnthropicWrapper(): Anthropic {
             response = await (await getClient()).chat.completions.create(
               {
                 model,
-                messages: openaiMessages,
+                messages: openaiMessagesWithoutTools,
                 max_tokens: params.max_tokens,
                 ...(params.temperature !== undefined && {
                   temperature: params.temperature,

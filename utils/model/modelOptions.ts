@@ -186,6 +186,11 @@ function getMistralModelOptions(): ModelOption[] {
   return [
     getDefaultOptionForUser(),
     {
+      value: 'mistral/mistral-large-2411',
+      label: 'Mistral Large 2411',
+      description: 'High-capability Mistral model for complex reasoning and coding',
+    },
+    {
       value: 'mistral/codestral-latest',
       label: 'Codestral Latest',
       description: 'Recommended latest Codestral model for coding tasks',
